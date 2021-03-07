@@ -14,7 +14,7 @@
 
 ![image-20210307171736359](./pic/image-setState.png)
 
-+ 这就是`setState`的逻辑，这里`setState`充当了一个分发器，将传入的对象分发到`enqueueSetState`中，
++ 就是`setState`的逻辑，这里`setState`充当了一个分发器，将传入的对象分发到`enqueueSetState`中，
 + `enqueueSetState`将新的 state 放进组件的状态队列里；用 `enqueueUpdate` 来处理将要更新的实例对象；
 + 进入到`enqueueUpdate` 的逻辑，在这里会有`batchingStrategy`对象，即批处理策略，引出最重要的`isBatchUpdates`这个属性，来决定是否直接走更新流程还是排队等待。
   + `isBatchingUpdates `这个属性，在 React 的生命周期函数以及合成事件执行前，会被 React 修改为 true，在 `isBatchingUpdates` 的约束下，`setState` 只能是异步的。
@@ -33,3 +33,30 @@
 如果同步更新了state，但是还没有执行render函数，那么state和props不能保持同步；
 
 + state和props不能保持一致性，会在开发中产生很多的问题；
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -70,17 +70,30 @@ export function useState<S>(initialState: (() => S) | S) {
 
 主要的逻辑只有两行。所以重点在于`dispatcher`
 
-![image-20210307180650056](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210307180650056.png
+![image-20210307180650056](./pic/image-mount.png)
 
-![image-20210307180729989](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210307180729989.png)
+
 
 mounState 的主要工作是初始化 Hooks，给出Hooks对象的结构。**hook 相关的所有信息收敛在一个 hook 对象里，而 hook 对象之间以单向链表的形式相互串联。**
+
+```js
+// ReactFiberHooks.js
+export type Hook = {
+  memoizedState: any, 
+
+  baseState: any,    
+  baseUpdate: Update<any, any> | null,  
+  queue: UpdateQueue<any, any> | null,  
+
+  next: Hook | null, 
+};
+```
 
 
 
 ### 更新阶段
 
-![image-20210307182247488](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210307182247488.png)
+![image-20210307182247488](./pic/image-update.png)
 
 首次渲染和更新渲染的区别，在于调用的是 mountState，还是 updateState。mountState 初始化了hooks对象，而 hooks 对象之间以单向链表的形式相互串联； updateState 之后的是操作链路，按顺序去遍历之前构建好的链表，取出对应的数据信息进行渲染。
 
