@@ -112,19 +112,25 @@ instance.get('/longRequest', {
 
 ## config
 
+### 默认配置
+
 默认配置 + 用户配置 = 最终配置。
 
 首先axios存在默认配置（位于源码的defaults.js文件中），主要是设置默认的请求头、格式化请求正文以及响应正文：
 
 设置默认请求头：
 
-![image-20210309212832101](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210309212832101.png)
+![image-20210309212832101](./pic/image-defaultContentType.png)
 
 根据当前环境，获取默认的请求方法：
 
-![image-20210309212948006](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210309212948006.png)
+![image-20210309212948006](./pic/image-adapter.png)
 
 这是默认配置，再来看用户配置，因为我们知道这些请求方式本质都是在调用`request`，`request`方法的参数其实才是我们说的用户配置。接下来进入`request`的源码。
+
+## `request`
+
+### 用户配置
 
 `request`部分主要完成合并配置，以及将拦截器的函数入栈`chain`，然后用`Promise`来执行。
 
@@ -148,7 +154,7 @@ instance.get('/longRequest', {
 > })
 > ```
 
-![image-20210310100045715](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210310100045715.png)
+![image-20210310100045715](./pic/image-request.png)
 
 这是用户配置的部分，接下来是合并配置：默认配置+用户配置=最终配置；
 
@@ -156,21 +162,103 @@ instance.get('/longRequest', {
 config = mergeConfig(this.defaults, config);
 ```
 
-该方法在`lib/coremergeConfig.js`中，主要完成了深拷贝以及默认值处理。
+`mergeConfig`方法在`lib/coremergeConfig.js`中，主要完成了深拷贝以及默认值处理，最后返回完整配置对象。
+
+这是`mergeConfig`源码的部分。
+
+接下来在`request`源码中处理了请求的`method`，如果用户有传就将值改全小写，都没有就默认为`get`。
+
+然后就是`request`后半部分，请求拦截器跟响应拦截器。
+
+### 拦截器
+
+拦截器部分本质上就是将请求拦截器，和响应拦截器，以及实际的请求（dispatchRequest）的方法组合成数组，类似如下的结构：
+
+`[请求拦截器1success, 请求拦截器1error, dispatchRequest, undefined, 响应拦截器1success, 响应拦截器1error]`
+
+这样一来，数组的结构就是从头到尾为就是按照请求的过程排好了请求拦截器一对对函数，然后是请求函数跟`undefined`，然后是响应拦截器一对对函数。
+
+然后声明一个`Promise.resolve()`后返回的`promise`, 把数组中从头部开始一对对函数的传入`promise.then()`中。
+
+这个操作可以利用`promise.then()`的特点，自动通过promise链去调用方法。如果请求拦截器中有报错，则最后不会调`dispatchRequest`方法并断掉。
+
+```js
+promise = Promise.resolve(config);
+    while (chain.length) {
+      promise = promise.then(chain.shift(), chain.shift());
+    }
+```
 
 
 
+![image-20210310222819928](./pic/image-workflow.png)
 
 
 
+所以拦截就是在过程中做操作，并不会改变什么：
+
+![image-20210310223434284](./pic/image-workflow2.png)
+
+```js
+//lib/core/Axios.js中拦截器的部分
+var requestInterceptorChain = [];
+  var synchronousRequestInterceptors = true;
+  this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
+    if (typeof interceptor.runWhen === 'function' && interceptor.runWhen(config) === false) {
+      return;
+    }
+
+    synchronousRequestInterceptors = synchronousRequestInterceptors && interceptor.synchronous;
+
+    requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
+  });
+
+  var responseInterceptorChain = [];
+  this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
+    responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
+  });
+
+  var promise;
+
+  if (!synchronousRequestInterceptors) {
+    var chain = [dispatchRequest, undefined];
+
+    Array.prototype.unshift.apply(chain, requestInterceptorChain);
+    chain.concat(responseInterceptorChain);
+
+    promise = Promise.resolve(config);
+    while (chain.length) {
+      promise = promise.then(chain.shift(), chain.shift());
+    }
+
+    return promise;
+  }
 
 
+  var newConfig = config;
+  while (requestInterceptorChain.length) {
+    var onFulfilled = requestInterceptorChain.shift();
+    var onRejected = requestInterceptorChain.shift();
+    try {
+      newConfig = onFulfilled(newConfig);
+    } catch (error) {
+      onRejected(error);
+      break;
+    }
+  }
 
+  try {
+    promise = dispatchRequest(newConfig);
+  } catch (error) {
+    return Promise.reject(error);
+  }
 
+  while (responseInterceptorChain.length) {
+    promise = promise.then(responseInterceptorChain.shift(), responseInterceptorChain.shift());
+  }
 
-
-
-
+  return promise;
+```
 
 
 
