@@ -1,14 +1,18 @@
-## Axios的基本使用
+# Axios的基本使用
 
 ```js
 //引入
 import axios from 'axios'
 ```
 
+## 请求方式
+
 首先Axios支持多种请求方式：
 
 + `axios(config)`或者`axios.reauest(config)`
 +  `axios[method]()`
+
+注意：`request()`是axios中最重要的方法之一，上面所有的调起请求的方式都是基于这个方法，也是我们下面学习源码重点解读的部分。
 
 ### `axios(config)`/`axios.request(config)`
 
@@ -33,19 +37,14 @@ axios({
 function createInstance(defaultConfig) {
   var context = new Axios(defaultConfig);
   var instance = bind(Axios.prototype.request, context);
-
   // Copy axios.prototype to instance
   utils.extend(instance, Axios.prototype, context);
-
   // Copy context to instance
   utils.extend(instance, context);
-
   return instance;
 }
-
 // Create the default instance to be exported
 var axios = createInstance(defaults);
-
 // Expose Axios class to allow class inheritance
 axios.Axios = Axios;
 ```
@@ -110,5 +109,92 @@ instance.get('/longRequest', {
   timeout: 5000
 });
 ```
+
+## config
+
+默认配置 + 用户配置 = 最终配置。
+
+首先axios存在默认配置（位于源码的defaults.js文件中），主要是设置默认的请求头、格式化请求正文以及响应正文：
+
+设置默认请求头：
+
+![image-20210309212832101](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210309212832101.png)
+
+根据当前环境，获取默认的请求方法：
+
+![image-20210309212948006](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210309212948006.png)
+
+这是默认配置，再来看用户配置，因为我们知道这些请求方式本质都是在调用`request`，`request`方法的参数其实才是我们说的用户配置。接下来进入`request`的源码。
+
+`request`部分主要完成合并配置，以及将拦截器的函数入栈`chain`，然后用`Promise`来执行。
+
+首先看合成配置，之前提到过请求的配置除了传参进来的`config`之外，还有在`axios.defaults`中的配置。所以，需要先拿到`config`，然后跟`axios.defaults`得到本次请求的配置。
+
+> lib/core/Axios.js
+
+我们知道**`arguments`** 是传递给函数的参数组成的类数组对象。这里的逻辑是先判断config是否是string类型，如果是，第二个传参才是config（第一个传参是url），否则，第一个传参就是config
+
+> ```js
+> // 第一种传参方式
+> axios.request('/api', {
+>   method: 'get'
+>   // ...
+> })
+> // 第二种传参方式
+> axios.request({
+>   url: '/api',
+>   method: 'get'
+>   // ...
+> })
+> ```
+
+![image-20210310100045715](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210310100045715.png)
+
+这是用户配置的部分，接下来是合并配置：默认配置+用户配置=最终配置；
+
+```js
+config = mergeConfig(this.defaults, config);
+```
+
+该方法在`lib/coremergeConfig.js`中，主要完成了深拷贝以及默认值处理。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
