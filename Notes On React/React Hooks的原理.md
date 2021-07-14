@@ -128,5 +128,6 @@ useState的源码非常简单，它本身作为一个函数是没办法保存状
 - 每一次调用`setCount(x)`，就dispach一个内容为x的action（action的表现为：将count设为x)，action存储在queue中，以前面讲述的有环链表规则来维护
 - 这些action最终在`updateReducer`中被调用，更新到`memorizedState`上，使我们能够获取到最新的state值。
 
+**每个hooks初始化的时候都会创建一个hook对象，然后将hook的memoizedState保存当前effect hook信息。注意：workInProgress/current Tree上也有memoizedState属性，他保存的是当前函数组件每个hooks形成的链表**
 
-
+> 函数组件对应 fiber 用 memoizedState 保存 hooks 信息，每一个 hooks 执行都会产生一个 hooks 对象，hooks 对象中，保存着当前 hooks 的信息，不同 hooks 保存的形式不同。每一个 hooks 通过 next 链表建立起关系。
