@@ -1,14 +1,16 @@
-## 说一下JSX
+## y说一下JSX
 
 > 在日常开发中，我们已经习惯了用JSX来描述React组件。
 
-在react 17之前，我们必须import React from "react" 才可以写JSX，本质上 是babel预编译JSX为React.createElemnet(type,config,children)，在react17之后，引入了全新的JSX转换，不会再将JSX转为React.createElemnet，而是自动从react的package中引入新的。
+在react 17之前，我们必须import React from "react" 才可以写JSX，本质上 是babel预编译JSX为React.createElemnet(type,config,children)，
 
-```json
+```js
 {
   "presets": ["@babel/preset-react"]
 }
 ```
+
+在react17之后，引入了全新的JSX转换，不会再将JSX转为React.createElemnet，而是自动从react的package中引入新的。
 
 **JSX 的本质是React.createElement这个 JS 调用的语法糖。**
 
@@ -202,6 +204,15 @@ workInProgressFiber.alternate === currentFiber;
 
 当浏览器繁忙的时候，这时候requestIdleCallback回调可能不会被执行，可以通过requestIdleCallback的第二个参数指定一个超时时间。超时就强制执行requestIdleCallback。
 
+> requestIdleCallback 是谷歌浏览器提供的一个 API， 在浏览器有空余的时间，浏览器就会调用 requestIdleCallback 的回调。首先看一下 requestIdleCallback的基本用法：
+>
+> ```js
+> requestIdleCallback(callback,{ timeout })
+> ```
+>
+> - callback 回调，浏览器空余时间执行回调函数。
+> - timeout 超时时间。如果浏览器长时间没有空闲，那么回调就不会执行，为了解决这个问题，可以通过 requestIdleCallback 的第二个参数指定一个超时时间。
+
 #### 中断
 
 在 render 阶段，React 通过时间分片的方式来处理一个或多个 Fiber 结点的更新任务，每次更新 Fiber 结点时会先向调度器请求任务执行权，如果有更高优先级的任务（如动画）则等它们执行完成之后再执行自己的更新任务。
@@ -218,3 +229,39 @@ workloop函数会从更新队列弹出任务来执行，每执行一个执行单
 >
 > 在执行上通过 requestIdleCallback 来调度执行每组任务，每组中的每个计算任务被称为 work，每个 work 完成后确认是否有优先级更高的 work 需要插入，如果有就让位，没有就继续。优先级通常是标记为动画或者 high 的会先处理。每完成一组后，将调度权交回主线程，直到下一次 requestIdleCallback 调用，再继续构建 workInProgress 树。
 
+#### 总结
+
+react16在react15的基础上多了一层调度器的架构，本质上是实现了浏览器requestIdleCallback这个API，以浏览器有没有剩余时间作为任务中断的标准，而requestIdleCallback正是浏览器有剩余时间触发的回调，不过由于浏览器兼容性以及触发频率不稳定，react官方实现了requestIdleCallback这个polyfill，也就是scheduler。不过scheduler除了实现在空闲时触发回调的功能外，还提供了多种调度优先级供任务设置。
+
+> scheduler是独立于react之外的库
+
+细品：可中断可恢复的实现还是靠fiber这个数据结构的设计，作为fiberNode的实例，其中的三个属性return、child、sibling，构成了一个链表结构，也就是可以用迭代的方式来处理这些节点，在源码中就是performUnitOfWork，本质上是实现一个深度遍历，performUnitOfWork负责对fiber进行操作，并按照深度优先遍历的顺序返回下一个fiber。
+
+有了链表结构，即使处理流程被中断了，也可以从上次未处理完的fiber继续遍历下去。
+
+在源码中：
+
+```js
+// 记录下一个需要处理的工作单元
+let nextUnitOfWork: Fiber | undefined
+// 记录 第一个工作单元
+let topWork: Fiber | undefined
+```
+
+调度和协调过程什么时候会被中断呢？
+
++ 当前帧无剩余时间
++ 有其他更高优先级的任务需要更新
+
+render阶段会给需要更新的fiber打上effectTag标记，挂载到rootFiber.firstEffect上，firstEffect上保存了一个需要执行 副作用的fiber节点的单向链表effectList。
+
+commit阶段会遍历三次effectList链表：
+
++ 执行DOM操作前
+  + 处理DOM节点渲染、删除后onfocus、onblur逻辑
+  + 调用getSnapsbotBeforeUpdate生命钩子
+  + 调度useEffect
++ 执行DOM操作
+  + 根据effectTag调度不同的处理函数处理fiber
++ 执行DOM操作后
+  + 更新ref
