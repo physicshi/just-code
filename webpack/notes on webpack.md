@@ -446,6 +446,10 @@ module.exports = {
 
 根据这个尝试我们就应该知道，如果需要创建多个页面，就需要在插件列表中加入多个 HtmlWebpackPlugin 的实例对象，让每个对象负责一个页面文件的生成。
 
+## 代码分割
+
+
+
 ## Tree shaking
 
 什么是Tree Shaking呢？
@@ -459,7 +463,7 @@ module.exports = {
 
  JavaScript的Tree Shaking：
 
-+ 对JavaScript进行Tree Shaking是源自打包工具rollup（后面我们也会讲的构建工具）；
++ 对JavaScript进行Tree Shaking是源自打包工具rollup；
 + 这是因为Tree Shaking依赖于ES Module的静态语法分析（不执行任何的代码，可以明确知道模块的依赖关系）；
 + webpack2正式内置支持了ES2015模块，和检测未使用模块的能力；
 + 在webpack4正式扩展了这个能力，并且通过package.json的sideEffects属性作为标记，告知webpack在编译时，
