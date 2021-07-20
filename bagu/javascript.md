@@ -1047,7 +1047,30 @@ JSONP("http://suggest.taobao.com/sug",{code:"utf-8",q:"123"}).then((data)=>{cons
 
 跨域资源共享，利用http头部字段让浏览器与服务器进行沟通，从而决定请求是否成功。
 
+分为简单请求与非简单请求：
 
+> 两者的区别就是对请求头和请求方法作了限制。
+
+**简单请求**
+
++ GET/POST/HEAD
+
++ Accept/Accept-language/Content-language/Content-type
+
+对于简单请求，在请求发出后，会自动的在头部字段添加origin，说明请求的源。服务器在拿到请求后，在回应时需要设置`Access-Control-Allow-Origin`字段，说明可以访问该资源的源，若origin在此范围内，就可以拿到该资源。
+
+```js
+// console.log(request.headers["referer"])
+response.setHeader("Access-Control-Allow-Origin","允许的源")
+```
+
+**非简单请求**
+
+对于非简单请求，会先发一条options请求作为预检请求，询问当前域名是否被允许，以及可以使用的http字段和头信息。然后再发出正式的CORS请求或者报错。
+
++ 在预检请求的响应返回后，若请求不满足响应头的条件，则触发XMLHttpRequest的onErrror方法；
+
++ 若满足响应头条件，则正常发送CORS请求，同简单请求一样，浏览器自动加上origin字段，服务端响应返回Access-Control-Allow-Origin
 
 ### 浏览器缓存
 
@@ -1055,11 +1078,145 @@ JSONP("http://suggest.taobao.com/sug",{code:"utf-8",q:"123"}).then((data)=>{cons
 
 ### 性能优化
 
+提到性能优化可能会想到精灵图、域名分片之类的。要有条理的来说这些。
 
+从输入URL到渲染，在网络层面会经历：
 
++ DNS解析
++ TCP连接
++ HTTP请求/响应
 
+#### 请求
 
+前两者我们没办法做什么，对于第三点，我们可以优化的点在于：
 
+- 减少请求次数
+- 减少单次请求所花费的时间
+
+##### 精灵图、内嵌的CSS/JS、base64图片
+
+对于减少请求次数来说，我们可以用精灵图、内嵌的CSS/JS、base64图片
+
+> base64图片是一种编码方式，可以直接写进css/html，浏览器可以识别，而不用再去请求一次图片。
+>
+> Base64 并非一种图片格式，而是一种编码方式。Base64 和雪碧图一样，是作为小图标解决方案而存在的。
+>
+> 每次加载图片，都是需要单独向服务器请求这个图片对应的资源的——这也就意味着一次 HTTP 请求的开销。
+>
+> **Base64 是一种用于传输 8Bit 字节码的编码方式，通过对图片进行 Base64 编码，我们可以直接将编码结果写入 HTML 或者写入 CSS，从而减少 HTTP 请求的次数。**
+>
+> 可以直接用这个字符串替换掉上文中的链接地址。你会发现浏览器原来是可以理解这个字符串的，它自动就将这个字符串解码为了一个图片，而不需再去发送 HTTP 请求。
+>
+> > 推荐的是利用 webpack 来进行 Base64 的编码——webpack 的 [url-loader](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fwebpack-contrib%2Furl-loader) ，它除了具备基本的 Base64 转码能力，还可以结合文件大小，帮我们判断图片是否有必要进行 Base64 编码。
+
+##### 开启gzip
+
+对于减少单次请求所花费的时间，我们可以开启gzip。
+
+在你的 request headers 中加上这么一句：
+
+```
+accept-encoding:gzip
+```
+
+压缩文件可以减少文件下载时间，让用户体验性更好。
+
+得益于 webpack 和 node 的发展，现在压缩文件已经非常方便了。
+
+在 webpack 可以使用如下插件进行压缩：
+
+- JavaScript：UglifyPlugin
+- CSS ：MiniCssExtractPlugin
+- HTML：HtmlWebpackPlugin
+
+其实，我们还可以做得更好。那就是使用 gzip 压缩。可以通过向 HTTP 请求头中的 Accept-Encoding 头添加 gzip 标识来开启这一功能。当然，服务器也得支持这一功能。
+
+gzip 是目前最流行和最有效的压缩方法。举个例子，我用 Vue 开发的项目构建后生成的 app.js 文件大小为 1.4MB，使用 gzip 压缩后只有 573KB，体积减少了将近 60%。
+
+附上 webpack 和 node 配置 gzip 的使用方法。
+
+**下载插件**
+
+```
+npm install compression-webpack-plugin --save-dev
+npm install compression
+```
+
+**webpack 配置**
+
+```
+const CompressionPlugin = require('compression-webpack-plugin');
+
+module.exports = {
+  plugins: [new CompressionPlugin()],
+}
+```
+
+**node 配置**
+
+```
+const compression = require('compression')
+// 在其他中间件前使用
+app.use(compression())
+```
+
+####  CSS 放在文件头部，JavaScript 文件放在底部
+
+所有放在 head 标签里的 CSS 和 JS 文件都会堵塞渲染（CSS 不会阻塞 DOM 解析、JS阻塞解析）。如果这些 CSS 和 JS 需要加载和解析很久的话，那么页面就空白了。所以 JS 文件要放在底部，等 HTML 解析完了再加载 JS 文件。
+
+那为什么 CSS 文件还要放在头部呢？
+
+因为先加载 HTML 再加载 CSS，会让用户第一时间看到的页面是没有样式的、“丑陋”的，为了避免这种情况发生，就要将 CSS 文件放在头部了。
+
+另外，JS 文件也不是不可以放在头部，只要给 script 标签加上 defer 属性就可以了，异步下载，延迟执行。
+
+> defer 掘金中用的多，作用是延迟：当浏览器遇到带有 defer 属性的 script 时，获取该脚本的网络请求也是异步的，不会阻塞浏览器解析 HTML，一旦网络请求回来之后，**如果此时 HTML 还没有解析完，浏览器不会暂停解析并执行 JS 代码，而是等待 HTML 解析完毕再执行 JS 代码**
+>
+> async 七牛用的多，异步，当浏览器遇到带有 async 属性的 script 时，请求该脚本的网络请求是异步的，不会阻塞浏览器解析 HTML，一旦网络请求回来之后，**如果此时 HTML 还没有解析完，浏览器会暂停解析，先让 JS 引擎执行代码，执行完毕后再进行解析**
+>
+> > 如果存在多个 defer script 标签，浏览器（IE9及以下除外）会保证它们按照在 HTML 中出现的顺序执行，不会破坏 JS 脚本之间的依赖关系。
+
+#### 域名分片
+
+浏览器限制每个域的活动连接数（Chrome针对一个域名可以开8个TCP连接），因此从一个域提供所有必需的资源可能会变慢，因为需要按顺序下载资源。使用域名分片后，所需的下载可以来自多个域，从而使浏览器可以同时下载所需的资源。比如淘宝。
+
+#### 静态资源放到CDN
+
+内容分发网络（CDN）是一组分布在多个不同地理位置的 Web 服务器。我们都知道，当服务器离用户越远时，延迟越高。CDN 就是为了解决这一问题，在多个位置部署服务器，让用户离服务器更近，从而缩短请求时间。
+
+CDN 的核心点有两个，一个是**缓存**，一个是**回源**。
+
+这两个概念都非常好理解。“缓存”就是说我们把资源 copy 一份到 CDN 服务器上这个过程，“回源”就是说 CDN 发现自己没有这个资源（一般是缓存的数据过期了），转头向根服务器（或者它的上层服务器）去要这个资源的过程。
+
+所谓“静态资源”，就是像 JS、CSS、图片等**不需要业务服务器进行计算即得的资源**。而“动态资源”，顾名思义是需要**后端实时动态生成的资源**，较为常见的就是 JSP、ASP 或者依赖服务端渲染得到的 HTML 页面。
+
+当用户访问一个网站时，如果没有 CDN，过程是这样的：
+
+1. 浏览器要将域名解析为 IP 地址，所以需要向本地 DNS 发出请求。
+2. 本地 DNS 依次向根服务器、顶级域名服务器、权限服务器发出请求，得到网站服务器的 IP 地址。
+3. 本地 DNS 将 IP 地址发回给浏览器，浏览器向网站服务器 IP 地址发出请求并得到资源。
+
+![img](https:////p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7d25d1b0091b4e00ae51789172a46d2d~tplv-k3u1fbpfcp-zoom-1.image)
+
+如果用户访问的网站部署了 CDN，过程是这样的：
+
+> 区别就是变成向负载均衡系统发送网络请求，负载均衡系统会根据浏览器请求的资源和地址，选出最优的缓存服务器发回给浏览器。浏览器再根据负载均衡系统发回的地址重定向到缓存服务器。
+
+1. 浏览器要将域名解析为 IP 地址，所以需要向本地 DNS 发出请求。
+2. 本地 DNS 依次向根服务器、顶级域名服务器、权限服务器发出请求，得到全局负载均衡系统（GSLB）的 IP 地址。
+3. 本地 DNS 再向 GSLB 发出请求，GSLB 的主要功能是根据本地 DNS 的 IP 地址判断用户的位置，筛选出距离用户较近的本地负载均衡系统（SLB），并将该 SLB 的 IP 地址作为结果返回给本地 DNS。
+4. 本地 DNS 将 SLB 的 IP 地址发回给浏览器，浏览器向 SLB 发出请求。
+5. SLB 根据浏览器请求的资源和地址，选出最优的缓存服务器发回给浏览器。
+6. 浏览器再根据 SLB 发回的地址重定向到缓存服务器。
+7. 如果缓存服务器有浏览器需要的资源，就将资源发回给浏览器。如果没有，就向源服务器请求资源，再发给浏览器并缓存在本地。
+
+![img](https:////p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/67c19972e7dd4ae0840a0f838dd6a017~tplv-k3u1fbpfcp-zoom-1.image)
+
+> > Cookie 是紧跟域名的。同一个域名下的所有请求，都会携带 Cookie。大家试想，如果我们此刻仅仅是请求一张图片或者一个 CSS 文件，我们也要携带一个 Cookie 跑来跑去（关键是 Cookie 里存储的信息我现在并不需要），这是一件多么劳民伤财的事情。Cookie 虽然小，请求却可以有很多，随着请求的叠加，这样的不必要的 Cookie 带来的开销将是无法想象的……
+>
+> 同一个域名下的请求会不分青红皂白地携带 Cookie，而静态资源往往并不需要 Cookie 携带什么认证信息。把静态资源和主页面置于不同的域名下，完美地避免了不必要的 Cookie 的出现！
+
+#### 升级HTTP2
 
 
 
