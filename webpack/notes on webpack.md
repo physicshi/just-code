@@ -21,12 +21,10 @@ webpack的安装目前分为两个：`webpack`、`webpack-cli`
 4. 所以在安装`webpack`时，我们需要同时安装`webpack-cli`（第三方的脚手架事实上是没有使用`webpack-cli`的，而是类似于
    自己的`vue-service-cli`的东西）
 
-![image-20210312204717216](C:\Users\sgy\AppData\Roaming\Typora\typora-user-images\image-20210312204717216.png)
-
 有全局安装和局部安装两种：
 
 ```js
-	npm install webpack webpack-cli -g #全局安装
+npm install webpack webpack-cli -g #全局安装
 npm install webpack webpack-cli -D #局部(开发依赖)安装 -D 是--save-dev
 ```
 
@@ -142,16 +140,16 @@ document.body.appendChild(component());
 
 module.rules的配置如下：
 
-+ rules属性对应的值是一个数组：[Rule]
-+ 数组中存放的是一个个的Rule，Rule是一个对象，对象中可以设置多个属性：
++ rules属性对应的值是一个数组：[{Rule},{Rule}]
++ 数组中存放的是一个个对象Rule，Rule是一个对象，对象中可以设置三个属性：
   + test属性：用于对resource（资源）进行匹配的，通常会设置成正则表达式；
   + use属性：对应的值时一个数组：[UseEntry]
-    + UseEn try是一个对象，可以通过对象的属性来设置一些其他属性
-      Ø loader：必须有一个loader属性，对应的值是一个字符串；
-      Ø options：可选的属性，值是一个字符串或者对象，值会被传入到loader中；
-      Ø query：目前已经使用options来替代；
+    + UseEntry是一个对象，可以通过对象的属性来设置一些其他属性
+      + loader：必须有一个loader属性，对应的值是一个字符串；
+      + options：可选的属性，值是一个字符串或者对象，值会被传入到loader中；
+      + query：目前已经使用options来替代；
     + 传递字符串（如：use: [ 'style-loader' ]）是loader 属性的简写方式（如：use: [ { loader: 'style-loader'} ]）；
-+  loader属性： Rule.use: [ { loader } ] 的简写。
+  +  loader属性： Rule.use: [ { loader } ] 的简写。
 
 ```js
 module.exports = {
