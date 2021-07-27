@@ -1,3 +1,16 @@
+- [总览](#总览)
+  - [`SSR`——服务端渲染](#ssr服务端渲染)
+    - [`SSR`优缺点](#ssr优缺点)
+  - [`CSR`——客户端渲染](#csr客户端渲染)
+    - [CSR（SPA）的优缺点](#csrspa的优缺点)
+  - [SSR vs CSR](#ssr-vs-csr)
+  - [React SSR](#react-ssr)
+    - [React SSR=SSR + SPA 完美的结合](#react-ssrssr--spa-完美的结合)
+- [React SSR的原理](#react-ssr的原理)
+  - [虚拟DOM](#虚拟dom)
+  - [同构](#同构)
+  - [总结](#总结)
+
 # 总览
 
 ## `SSR`——服务端渲染

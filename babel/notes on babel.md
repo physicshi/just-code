@@ -1,8 +1,60 @@
- babel最开始叫6to5，就是es6转es5，不过后面因为es7、es8等esnext的出现，6to5已经没办法表达出转译器的定位了，所以改名为babel。
 
-babel是巴别塔的意思。
+- [babel的用途](#babel的用途)
+  - [转译esnext、ts、flow等到目标环境支持的js](#转译esnexttsflow等到目标环境支持的js)
+  - [特定用途的代码转换](#特定用途的代码转换)
+  - [代码的静态分析](#代码的静态分析)
+  - [总结](#总结)
+- [babel的编译流程](#babel的编译流程)
+  - [为什么分三步](#为什么分三步)
+    - [为什么要有parse](#为什么要有parse)
+    - [为什么要有transform](#为什么要有transform)
+    - [为什么要有generate](#为什么要有generate)
+    - [总结](#总结-1)
+  - [编译细节](#编译细节)
+    - [parse](#parse)
+    - [transform](#transform)
+    - [generate](#generate)
+    - [总结](#总结-2)
+- [babel的AST](#babel的ast)
+  - [常见的AST节点](#常见的ast节点)
+    - [Literal](#literal)
+    - [Identifier](#identifier)
+    - [Statement](#statement)
+    - [Declaration](#declaration)
+    - [Modules](#modules)
+      - [import](#import)
+      - [export](#export)
+  - [AST 的公共属性](#ast-的公共属性)
+  - [总结](#总结-3)
+- [babel的api](#babel的api)
+  - [@babel/parser](#babelparser)
+  - [@babel/traverse](#babeltraverse)
+    - [遍历过程](#遍历过程)
+    - [path](#path)
+    - [state](#state)
+  - [@babel/types](#babeltypes)
+  - [@babel/generator](#babelgenerator)
+  - [@babel/core](#babelcore)
+  - [babel实战：插入函数调用参数](#babel实战插入函数调用参数)
+    - [需求变更](#需求变更)
+    - [思路分析](#思路分析)
+    - [代码实现](#代码实现)
+- [babel插件和preset](#babel插件和preset)
+  - [plugin的格式](#plugin的格式)
+    - [返回对象的函数](#返回对象的函数)
+    - [对象](#对象)
+  - [preset](#preset)
+  - [ConfigItem](#configitem)
+  - [名字](#名字)
+  - [总结](#总结-4)
+- [babel插件](#babel插件)
+  - [使用 Babel plugins](#使用-babel-plugins)
+ 
 
 ## babel的用途
+babel最开始叫6to5，就是es6转es5，不过后面因为es7、es8等esnext的出现，6to5已经没办法表达出转译器的定位了，所以改名为babel。
+
+babel是巴别塔的意思。
 
 ### 转译esnext、ts、flow等到目标环境支持的js
 

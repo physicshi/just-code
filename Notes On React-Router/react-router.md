@@ -1,6 +1,27 @@
+- [react-router](#react-router)
+  - [回顾历史](#回顾历史)
+  - [前端路由](#前端路由)
+  - [react-router-dom的使用](#react-router-dom的使用)
+    - [NavLink](#navlink)
+    - [Switch](#switch)
+    - [Redirect](#redirect)
+  - [路由嵌套](#路由嵌套)
+    - [一般实现](#一般实现)
+    - [hooks写法](#hooks写法)
+      - [useParams](#useparams)
+  - [路由配置](#路由配置)
+  - [react-router中的hooks](#react-router中的hooks)
+    - [useParams](#useparams-1)
+    - [useRouteMatch](#useroutematch)
+  - [BrowserRouter和HashRouter的原理](#browserrouter和hashrouter的原理)
+    - [History的实现](#history的实现)
+      - [browserHistory](#browserhistory)
+      - [hashHistory](#hashhistory)
+  - [写在后面](#写在后面)
+    - [Route的render属性](#route的render属性)
+    - [withRouter](#withrouter)
+    - [RouteComponentProps](#routecomponentprops)
 # react-router
-
-[toc]
 
 ## 回顾历史
 

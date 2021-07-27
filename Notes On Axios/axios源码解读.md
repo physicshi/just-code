@@ -1,3 +1,18 @@
+- [Axios的基本使用](#axios的基本使用)
+  - [请求方式](#请求方式)
+    - [`axios(config)`/`axios.request(config)`](#axiosconfigaxiosrequestconfig)
+      - [使用方法](#使用方法)
+      - [源码](#源码)
+    - [`axiosmethod`](#axiosmethod)
+      - [使用方法](#使用方法-1)
+      - [源码](#源码-1)
+    - [`axios.create()`](#axioscreate)
+  - [config](#config)
+    - [默认配置](#默认配置)
+  - [`request`](#request)
+    - [用户配置](#用户配置)
+    - [拦截器](#拦截器)
+
 # Axios的基本使用
 
 ```js
