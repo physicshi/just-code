@@ -1,4 +1,22 @@
-## y说一下JSX
+- [说一下JSX](#说一下jsx)
+- [虚拟DOM](#虚拟dom)
+- [diff算法](#diff算法)
+- [react生命周期](#react生命周期)
+- [react事件系统](#react事件系统)
+- [hooks原理](#hooks原理)
+- [React Fiber架构](#react-fiber架构)
+  - [整体流程](#整体流程)
+    - [双缓存](#双缓存)
+    - [渲染](#渲染)
+      - [首次渲染](#首次渲染)
+      - [更新](#更新)
+  - [时间切片](#时间切片)
+    - [requestIdleCallback实现时间分片](#requestidlecallback实现时间分片)
+    - [中断](#中断)
+    - [总结](#总结)
+- [redux](#redux)
+
+## 说一下JSX
 
 > 在日常开发中，我们已经习惯了用JSX来描述React组件。
 
@@ -19,6 +37,14 @@ createElement接受三个参数，type用于标识节点的类型，比如div、
 ## 虚拟DOM
 
 一句话就够了：虚拟DOM并不是为了性能。
+
+## diff算法
+
+## react生命周期
+
+## react事件系统
+
+## hooks原理
 
 ## React Fiber架构
 
@@ -265,3 +291,6 @@ commit阶段会遍历三次effectList链表：
   + 根据effectTag调度不同的处理函数处理fiber
 + 执行DOM操作后
   + 更新ref
+
+## redux
+
