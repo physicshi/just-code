@@ -14,7 +14,14 @@
     - [useParams](#useparams-1)
     - [useRouteMatch](#useroutematch)
   - [BrowserRouter和HashRouter的原理](#browserrouter和hashrouter的原理)
-    - [History的实现](#history的实现)
+    - [History 模式](#history-模式)
+      - [在 history 中跳转](#在-history-中跳转)
+      - [添加和修改历史记录中的条目](#添加和修改历史记录中的条目)
+      - [监听页面路由切换](#监听页面路由切换)
+    - [Hash 模式](#hash-模式)
+      - [使用location.hash来设置和获取 hash](#使用locationhash来设置和获取-hash)
+      - [监听hashchange事件](#监听hashchange事件)
+    - [History的实现细节（一些api）](#history的实现细节一些api)
       - [browserHistory](#browserhistory)
       - [hashHistory](#hashhistory)
   - [写在后面](#写在后面)
@@ -542,9 +549,69 @@ function App() {
 
  每个router组件创建了一个history对象，用来记录当前路径( `history.location` )，上一步路径也存储在堆栈中。当前路径改变时，视图会重新渲染，给你一种跳转的感觉。当前路径又是如何改变的呢？history对象有 `history.push()`和 `history.replace()`这些方法来实现。当你点击 `<Link>`组件会触发 `history.push()`，使用 `<Redirect>`则会调用 `history.replace()`。其他方法 - 例如 `history.goBack()`和 `history.goForward()` - 用来根据页面的后退和前进来跳转history堆栈。
 
-那么history内部又是怎么样实现路由监听和响应的呢？
+### History 模式
+History 的路由模式，依赖了一个关键的属性window.history，该属性可用来获取用于操作浏览器历史记录的 History 对象。也就是说，通过使用window.history，我们可以实现以下与路由相关的重要能力。比如：
 
-### History的实现
+#### 在 history 中跳转
+
+使用window.history.back()、window.history.forward()和window.history.go()方法，可以实现在用户历史记录中向后和向前的跳转。
+
+#### 添加和修改历史记录中的条目
+
+使用history.pushState()和history.replaceState()方法，它可以操作浏览器的历史栈，同时不会引起页面的刷新（可避免页面重新加载）。
+
+#### 监听页面路由切换
+
+当同一个页面在历史记录间切换时，就会产生popstate事件，可以通过window.popstate监听页面路由切换的情况。
+
+也就是说，使用pushState()和replaceState()来修改路由信息，通过popstate事件监听页面路由变化，来进行页面的局部更新，这便是 History 的路由模式。
+
+但 History 的路由模式需要依赖 HTML5 History API（IE10 以上），以及服务器的配置来支持，所以也有不少的开发者会使用 Hash 模式来管理 Web 应用的路由。
+
+### Hash 模式
+Hash 模式使用的是从井号(#)开始的 URL（锚）片段，主要依赖 Location 对象的 hash 属性（location.hash）和hashchange事件，包括：
+
+#### 使用location.hash来设置和获取 hash
+
+location.hash的设置和获取，并不会造成页面重新加载，利用这一点，我们可以记录页面关键信息的同时，提升页面体验。
+
+#### 监听hashchange事件
+
+当页面的 hash 改变时，hashchange事件会被触发，同时提供了两个属性：newURL（当前页面新的 URL）和oldURL（当前页面旧的 URL）。
+
+部分浏览器不支持onhashchange事件，我们可以自行使用定时器检测和触发的方式来进行兼容，可以使用以下的代码逻辑来实现：
+
+```js
+(function (window) {
+  // 如果浏览器原生支持该事件，则退出
+  if ("onhashchange" in window.document.body) {
+    return;
+  }
+  var location = window.location,
+    oldURL = location.href,
+    oldHash = location.hash;
+  // 每隔100ms检测一下location.hash是否发生变化
+  setInterval(function () {
+    var newURL = location.href,
+      newHash = location.hash;
+    // 如果hash发生了变化，且绑定了处理函数...
+    if (newHash != oldHash && typeof window.onhashchange === "function") {
+      // 执行事件触发
+      window.onhashchange({
+        type: "hashchange",
+        oldURL: oldURL,
+        newURL: newURL,
+      });
+      oldURL = newURL;
+      oldHash = newHash;
+    }
+  }, 100);
+})(window);
+```
+
+我们可以看到，Hash 路由模式使用location.hash来设置和获取 hash，并通过window.onhashchange监听基于 hash 的路由变化，来进行页面更新处理的。
+
+### History的实现细节（一些api）
 
 在认识history之前，我们首先知道浏览器给我们提供的原生路由功能，比如[`location`](https://developer.mozilla.org/zh-CN/docs/Web/API/Location)，接下来的很多方法中将出现它们的影子。
 
