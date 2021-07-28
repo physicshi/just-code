@@ -1,19 +1,30 @@
 - [react-router](#react-router)
+  
   - [回顾历史](#回顾历史)
+  
   - [前端路由](#前端路由)
+  
   - [react-router-dom的使用](#react-router-dom的使用)
+    
     - [NavLink](#navlink)
     - [Switch](#switch)
     - [Redirect](#redirect)
+  
   - [路由嵌套](#路由嵌套)
+    
     - [一般实现](#一般实现)
     - [hooks写法](#hooks写法)
       - [useParams](#useparams)
+  
   - [路由配置](#路由配置)
+  
   - [react-router中的hooks](#react-router中的hooks)
+    
     - [useParams](#useparams-1)
     - [useRouteMatch](#useroutematch)
+  
   - [BrowserRouter和HashRouter的原理](#browserrouter和hashrouter的原理)
+    
     - [History 模式](#history-模式)
       - [在 history 中跳转](#在-history-中跳转)
       - [添加和修改历史记录中的条目](#添加和修改历史记录中的条目)
@@ -24,11 +35,16 @@
     - [History的实现细节（history的一些api）](#history的实现细节history的一些api)
       - [browserHistory](#browserhistory)
       - [hashHistory](#hashhistory)
+  
   - [写在后面](#写在后面)
+    
     - [Route的render属性](#route的render属性)
+    
     - [withRouter](#withrouter)
+    
     - [RouteComponentProps](#routecomponentprops)
-# react-router
+      
+      # react-router
 
 ## 回顾历史
 
@@ -158,10 +174,10 @@ function Users() {
 ```js
 <Switch>
   <Route exact path="/" component={Home}/>
-	<Route path="/about" component={About}/>
-	<Route path="/users" component={Users}/>
-	<Route path="/:id" component={Users}/>
-	<Route component={NoMatch}/>
+    <Route path="/about" component={About}/>
+    <Route path="/users" component={Users}/>
+    <Route path="/:id" component={Users}/>
+    <Route component={NoMatch}/>
 </Switch>
 ```
 
@@ -175,8 +191,8 @@ function Users() {
 function User(){
   //省略逻辑
   return (
-  	<div>
-    	isLogin?<div>已登陆</div>:<Redirect to="/login"/>
+      <div>
+        isLogin?<div>已登陆</div>:<Redirect to="/login"/>
     </div>
   )
 }
@@ -195,7 +211,7 @@ import React from "react";
 import {BrowserRouter as Router,Switch,Link,Route} from "react-router-dom";
 function AboutProduct(){
   return (
-  	<div>AboutProduct</div>
+      <div>AboutProduct</div>
   )
 }
 function AboutUsers(){
@@ -206,12 +222,12 @@ function AboutUsers(){
 
 export default function About (){
   return (
-  	<Router>
-    	<Link to="/about">商品</Link>
-    	<Link to="about/users">商品客户</Link>
+      <Router>
+        <Link to="/about">商品</Link>
+        <Link to="about/users">商品客户</Link>
     <Switch>
-    	<Route exact path="/about" component={AboutProduct}/>
-    	<Route path="/about/users" component={AboutUsers}/>
+        <Route exact path="/about" component={AboutProduct}/>
+        <Route path="/about/users" component={AboutUsers}/>
     </Switch>
     </Router>
   )
@@ -541,8 +557,6 @@ function App() {
 }
 ```
 
-
-
 ## BrowserRouter和HashRouter的原理
 
 > `history`是一个统一了所有DOM和非DOM环境会话记录的Javascript库。history提供了简洁的API，让你可以管理history堆栈、跳转、跳转前确认，以及保持会话之间的状态。
@@ -552,6 +566,7 @@ function App() {
 **react-router** 是建立在history之上的，**history本质上是维护了一个路由堆栈**，底层就是对于浏览器原声api的封装。
 
 ### History 模式
+
 History 的路由模式，依赖了一个关键的属性window.history，该属性可用来获取用于操作浏览器历史记录的 History 对象。也就是说，通过使用window.history，我们可以实现以下与路由相关的重要能力。比如：
 
 #### 在 history 中跳转
@@ -571,6 +586,7 @@ History 的路由模式，依赖了一个关键的属性window.history，该属�
 但 History 的路由模式需要依赖 HTML5 History API（IE10 以上），以及服务器的配置来支持，所以也有不少的开发者会使用 Hash 模式来管理 Web 应用的路由。
 
 ### Hash 模式
+
 Hash 模式使用的是从井号(#)开始的 URL（锚）片段，主要依赖 Location 对象的 hash 属性（location.hash）和hashchange事件，包括：
 
 #### 使用location.hash来设置和获取 hash
@@ -723,10 +739,3 @@ const App: React.FC<IProps & RouteComponentProps> = function(props) {
 App.defaultProps = {};
 export default withRouter(App);
 ```
-
-
-
-
-
-
-

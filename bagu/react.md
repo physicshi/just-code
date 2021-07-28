@@ -38,17 +38,97 @@ createElement接受三个参数，type用于标识节点的类型，比如div、
 
 一句话就够了：虚拟DOM并不是为了性能。
 
+JSX最终返回的是element对象，就是描述组件内容的数据结构，但是不包括组件在更新中的优先级、组件的状态、组件被打上的用于**Renderer**的`标记`等（这些都包括在fiber中）；
+
+所以，在组件`mount`时，`Reconciler`根据`JSX`返回的组件内容生成组件对应的`Fiber节点`。
+
+在`update`时，`Reconciler`将`JSX`与`Fiber节点`保存的数据对比，生成组件对应的`Fiber节点`，并根据对比结果为`Fiber节点`打上`标记`。-> `diff`
+
+`commit`时，只更新打上标记的`fiber`节点。
+
+至此，渲染结束。
+
 ## diff算法
+
+react diff算法主要分为三个维度：
+
++ tree diff
+  
+  + 对树进行分层比较。两棵树只对同一层次的节点进行比较，如果发现节点已经不存在了，则该节点及其子节点会被完全删除掉。
+
++ component diff
+  
+  + 更新前后同一层react组件，如果组件是同一类型则进行树比对；如果不是就会进行销毁->创建
+
++ element diff
+  
+  + 同一层级所有节点的diff，主要有删除、插入、移动三种节点操作；其中节点重新排序同时涉及插入、移动、删除三个操作，可以通过标记 key 的方式，React 可以直接移动 DOM 节点，降低内耗。
+
+在fiber机制下，这里说的节点和树对应着fiberNode和fiberTree，整个更新过程由 current 与 workInProgress 两株树双缓冲完成。当 workInProgress 更新完成后，通过修改 current 相关指针指向的节点，完成更新。
 
 ## react生命周期
 
+生命周期主要分为三个阶段：挂载期、更新期、卸载期；
+
+### 挂载期
+
+首先是挂载阶段，也就是初始化渲染，会经历
+
++ `constructor()`初始化状态
+
++ `getDerivedStateFromProps()`利用`props`更新`state`，接收来自父组件的`props`以及自身`state`两个参数，**返回一个对象作为更新组件的`stat`**
+  
+  + `render()`把需要更新的内容返回出来（真实的`DOM`渲染会经过`ReactDom.render`完成）
+
++ 最后是`componentDidMount()`会在渲染结束后被触发
+
+### 更新期
+
+然后是更新阶段：
+
+组件更新会存在两种可能：父组件触发的更新以及组件自身调用`setState`。
+
++ 对于由父组件触发的更新，我们会经历`getDerivedStateFromProps()`，然后是`shouldComponentUpdate()`逻辑；
+
++ 对于组件自身触发的更新，我们会直接来到`shouldComponentUpdate()`这个逻辑，`shouldComponentUpdate`默认返回`true`，也就是无条件重渲染，如果返回`false`，则不进行渲染，在实际开发中会引入`pureComponent`进行浅比较，不要无条件重渲染。
+
++ 然后是`render()`
+
++ `getSnapBeforeUpdate()`传入两个参数`(prevState,prevProps)`，执行时机是真实`DOM`更新之前，我们可以拿到更新前DOM信息，返回值将作为参数传递给 `componentDidUpdate()`
+
++ `componentDidUpdate()`组件渲染结束后调用该方法。
+
+### 卸载期
+
+最后是卸载阶段：
+
++ `ComponentWillUnmount()`
+
+
+
+那些抛弃的生命周期方法主要是给`fiber`让路。
+
+在`react16`之后，我们废弃了很多`componentWillxxx`这样的`API`，主要原因在于引入了`fiber`架构，`fiber`架构会使原本同步的`render`过程变成"异步"的。这就意味着`render`阶段可以暂停、中止、重启；所以很多生命周期可能会被重复执行。
+
+很多滥用生命周期的操作，在`fiber`机制下就会有很多`bug`，才会有`getDerivedStateFromProps()`这个静态方法，没办法拿到`this`，确保了生命周期方法更纯粹、可控、可预测。
+
 ## react事件系统
 
-## hooks原理
+react事件在原生的DOM事件体系上封装了一个合成事件层。react事件系统采用委托机制，实现了统一的事件监听；
+
+事件都不会被绑定在具体的元素上，而是统一被绑定在页面的 document 上。当事件在具体的 DOM 节点上被触发后，最终都会冒泡到 document 上，然后将事件分发到具体的组件实例。
+
+react17之后，代理到`fiberRoot`上了。
+
+<img src="./img/event.png" />
+
+> + 合成事件符合W3C规范，在底层抹平了不同浏览器的差异，不必再关注底层兼容。
+> 
+> + 事件委托可以节省内存开销 → React 合成事件承袭了事件委托的思想 → 合成事件性能更好。
 
 ## React Fiber架构
 
-在fiber架构前，react在渲染时会递归比对虚拟DOM树，找出要变动的节点，然后同步更新他们，一气呵成。这个过程被称为Reconcilation，中文叫做协调。但是在协调期间，react会一直霸占浏览器资源，一则会导致用户的行为得不到响应，二则是掉帧。
+在 React 16 之前，每当我们触发一次组件的更新，React 都会构建一棵新的虚拟 DOM 树，通过与上一次的虚拟 DOM 树进行 diff，实现对 DOM 的定向更新。这个过程，是一个递归的过程（**react16之后就没有所谓的两棵虚拟DOM树了**）。这个过程被称为Reconcilation，中文叫做协调。但是在协调期间，react会一直霸占浏览器资源，一则会导致用户的行为得不到响应，二则是掉帧。
 
 react通过fiber架构，让自己的协调过程变成**可中断**的，适时让出任务执行权，可以让浏览器及时响应用户的交互。（一个任务短时间内无法完成就中断，执行另一个任务，不阻塞交互，让用户觉得快）。
 
@@ -58,11 +138,11 @@ react通过fiber架构，让自己的协调过程变成**可中断**的，适时
 
 在 render 阶段，React 通过时间分片的方式来处理一个或多个 Fiber 结点的更新任务，每次更新 Fiber 结点时会先向调度器请求任务执行权，如果有更高优先级的任务（如动画）则等它们执行完成之后再执行自己的更新任务。
 
-得到任务执行权后，React 将**每个 Fiber 结点作为最小工作单位**（执行单元），通过自顶向下逐个遍历 Fiber 结点，构建workInProgress 树（一颗新的Fiber 树，更新的计算、调用部分生命周期函数等会在这个过程中完成）。这一过程总是从顶层的 HostRoot 结点开始遍历，直到找到未完成工作或者需要处理的结点。render 阶段执行完成后，FiberRoot 对象上面的 current 属性指向了一颗「Fiber 树」，我们称它为 current树，current 树上面的alternate 属性指向了另一颗「Fiber 树」也就是后面要讲的 workInProgress 树。
+得到任务执行权后，React 将**每个 Fiber 结点作为最小工作单位**（执行单元），通过自顶向下逐个遍历 Fiber 结点，构建workInProgress 树（一颗新的Fiber 树，更新的计算、调用部分生命周期函数等会在这个过程中完成）。这一过程总是从顶层的 HostRoot 结点开始遍历，直到找到未完成工作或者需要处理的结点。render 阶段执行完成后，FiberRoot 对象上面的 current 属性指向了一颗「Fiber 树」，我们称它为 current树，current 树上面的alternate 属性指向了另一颗「Fiber 树」也就是 workInProgress 树。
 
 > 副作用列表来描述需要实际做的操作，比如 DOM 的更新与增删，调用生命周期函数等等。
 
-commit阶段负责将更新内容映射到屏幕，该阶段目标： 将 render 阶段得到的副作用列表中的更新信息渲染到屏幕。执行逻辑： 通过遍历副作用列表根据副作用类型提交具体的副作用，包括 DOM 更新、调用生命周期函数、ref 更新等一系列用户可见的 UI 变化。进入 commit 阶段时，fiberRoot 对象上面的 current 树反应 当前 屏幕上 UI 的状态，workInProgress 树反映 未来
+commit阶段负责将更新内容映射到屏幕，该阶段目标： 将 render 阶段得到的副作用列表中的更新信息渲染到屏幕。执行逻辑： 通过遍历副作用列表根据副作用类型提交具体的副作用，包括 DOM 更新、调用生命周期函数、ref 更新等一系列用户可见的 UI 变化。进入 commit 阶段时，fiberRoot 对象上面的 current 树反应 当前 屏幕上 UI 的状态，workInProgress 树反映 未来。
 需要映射到屏幕上 UI 的状态。副作用列表来描述需要实际做的操作，比如 DOM 的更新与增删，调用生命周期函数等等。事实上，副作用列表是 workInProgress 树的子集。
 commit 阶段的工作会导致用户可见的变化，比如 DOM 更新。因此该过程不可中断，必须一直执行直到更新完成。
 
@@ -81,8 +161,9 @@ commit 阶段的工作会导致用户可见的变化，比如 DOM 更新。因�
 3. 在进入 render 阶段前要进行任务调度，申请过的更新执行权后才能进行后续渲染工作。
 4. 此时构建 workInProgress 树时也会尽可能的复用上一次创建的 Fiber 结点，同时对需要更新的结点标记对应的 effectTag。
 5. 在 commit 阶段得到的 Effect List 是被标记了 effectTag 的 Fiber 结点集合（一个链表），其一般是workInProgress 树的子集。
+6. 我们要做的就是只更新标记了 effectTag 的 Fiber 结点集合。
 
-###　fiberRoot和rootFiber
+### fiberRoot和rootFiber
 
 fiberRoot对象是整个fiber架构的入口，本质上是fiberRootNode的实例，这个对象很复杂：
 
@@ -231,11 +312,11 @@ workInProgressFiber.alternate === currentFiber;
 当浏览器繁忙的时候，这时候requestIdleCallback回调可能不会被执行，可以通过requestIdleCallback的第二个参数指定一个超时时间。超时就强制执行requestIdleCallback。
 
 > requestIdleCallback 是谷歌浏览器提供的一个 API， 在浏览器有空余的时间，浏览器就会调用 requestIdleCallback 的回调。首先看一下 requestIdleCallback的基本用法：
->
+> 
 > ```js
 > requestIdleCallback(callback,{ timeout })
 > ```
->
+> 
 > - callback 回调，浏览器空余时间执行回调函数。
 > - timeout 超时时间。如果浏览器长时间没有空闲，那么回调就不会执行，为了解决这个问题，可以通过 requestIdleCallback 的第二个参数指定一个超时时间。
 
@@ -248,11 +329,11 @@ workInProgressFiber.alternate === currentFiber;
 workloop函数会从更新队列弹出任务来执行，每执行一个执行单元，就检查时间是否充足，如果充足就执行下一个执行单元，反之停止执行，保存现场等待下一次 requestIdleCallback 调用，再继续构建 workInProgress 树。
 
 >  Fiber Reconciler的调度方式主要有两个特点，第一个是协作式多任务模式，在这个模式下，线程会定时放弃自己的运行权利，交还给主线程，通过requestIdleCallback 实现。第二个特点是策略优先级，调度任务通过标记 tag 的方式分优先级执行，比如动画，或者标记为 high 的任务可以优先执行。Fiber Reconciler的基本单位是 Fiber，Fiber 基于过去的 React Element 提供了二次封装，提供了指向父、子、兄弟节点的引用，为 diff 工作的双链表实现提供了基础。
->
+> 
 > 但是后面优先级方式更新为lane。
->
+> 
 > Render 阶段的执行特点是可中断、可停止，主要是通过构造 workInProgress 树计算出 diff。以 current 树为基础，将每个 Fiber 作为一个基本单位，自下而上逐个节点检查并构造 workInProgress 树。这个过程不再是递归，而是基于循环来完成。
->
+> 
 > 在执行上通过 requestIdleCallback 来调度执行每组任务，每组中的每个计算任务被称为 work，每个 work 完成后确认是否有优先级更高的 work 需要插入，如果有就让位，没有就继续。优先级通常是标记为动画或者 high 的会先处理。每完成一组后，将调度权交回主线程，直到下一次 requestIdleCallback 调用，再继续构建 workInProgress 树。
 
 #### 总结
@@ -294,3 +375,14 @@ commit阶段会遍历三次effectList链表：
 
 ## redux
 
+redux是js状态管理容器，提供了可预测的状态管理。
+
+主要由三部分构成：
+
++ store：一个只读的单一数据源
+
++ action：对变化的描述
+
++ reducer：对变化进行分发和处理，最终将新的数据返回给store
+
+在整个过程，数据流都是严格单向的，如果想对数据进行改变，只有一种途径——派发action。action会被reducer读取，进而根据action内容的不同对数据进行修改、生成新的state，新的state会更新到store对象里，进而驱动视图层面做出相应的改变。
