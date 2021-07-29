@@ -2,9 +2,16 @@
 - [虚拟DOM](#虚拟dom)
 - [diff算法](#diff算法)
 - [react生命周期](#react生命周期)
+  - [挂载期](#挂载期)
+  - [更新期](#更新期)
+  - [卸载期](#卸载期)
 - [react事件系统](#react事件系统)
-- [hooks原理](#hooks原理)
+- [react hooks原理](#react-hooks原理)
+  - [hooks原理](#hooks原理)
+  - [hook必须放在顶层声明](#hook必须放在顶层声明)
+  - [一些细节](#一些细节)
 - [React Fiber架构](#react-fiber架构)
+  - [fiberRoot和rootFiber](#fiberroot和rootfiber)
   - [整体流程](#整体流程)
     - [双缓存](#双缓存)
     - [渲染](#渲染)
@@ -104,8 +111,6 @@ react diff算法主要分为三个维度：
 
 + `ComponentWillUnmount()`
 
-
-
 那些抛弃的生命周期方法主要是给`fiber`让路。
 
 在`react16`之后，我们废弃了很多`componentWillxxx`这样的`API`，主要原因在于引入了`fiber`架构，`fiber`架构会使原本同步的`render`过程变成"异步"的。这就意味着`render`阶段可以暂停、中止、重启；所以很多生命周期可能会被重复执行。
@@ -125,6 +130,59 @@ react17之后，代理到`fiberRoot`上了。
 > + 合成事件符合W3C规范，在底层抹平了不同浏览器的差异，不必再关注底层兼容。
 > 
 > + 事件委托可以节省内存开销 → React 合成事件承袭了事件委托的思想 → 合成事件性能更好。
+
+## react hooks原理
+
+### hooks原理
+
+函数组件本身作为一个函数是没办法保存状态的，我们真正的状态存储在节点上，即`FiberNode`的`memoizedState`属性上。
+
+函数组件的`memoizedState`属性保存的是对应`fiber`的`hooks`链表（`Hook`对象有一个`next`属性，指向下一次`useXXX`对应的Hook对象）。
+
+**每个`hooks`初始化的时候都会创建一个`hook`对象（`hook`对象也有`memoizedState`属性），然后用`hook`的`memoizedState`保存当前`effect`信息（或者state值）**。在`commit`阶段会更新这些副作用。
+
+
+
+### hook必须放在顶层声明
+
+**因为hooks以链表形式存在，所以`useState`（包括其他的Hooks）都必须在`FunctionalComponent`的根作用域中声明，也就是不能在`if`或者循环中声明**。
+
+不然没办法保证hooks是按顺序执行的，可能某一次执行条件没有满足（对应的hooks没有执行），对于下一个`hooks`就会拿到错误的状态。
+
+
+
+> **最主要的原因就是你不能确保这些条件语句每次执行的次数是一样的**，也就是说如果第一次我们创建了`state1 => hook1, state2 => hook2, state3 => hook3`这样的对应关系之后，下一次执行因为`something`条件没达成，导致`useState(1)`没有执行，那么运行`useState(2)`的时候，拿到的`hook`对象是`state1`的，那么整个逻辑就乱套了，**所以这个条件是必须要遵守的！**
+
+### 一些细节
+
+> 不同类型`hook`的`memoizedState`保存不同类型数据，具体如下：
+> 
+> - useState：对于`const [state, updateState] = useState(initialState)`，`memoizedState`保存`state`的值
+> 
+> - useReducer：对于`const [state, dispatch] = useReducer(reducer, {});`，`memoizedState`保存`state`的值
+> 
+> - useEffect：`memoizedState`保存包含`useEffect回调函数`、`依赖项`等的链表数据结构`effect`。`effect`链表同时会保存在`fiber.updateQueue`中
+
+比如：
+
+对于  useEffect 更新流程，无非判断是否执行下一次的 effect 副作用函数：
+
+```js
+function updateEffect(create,deps){
+    const hook = updateWorkInProgressHook();
+    if (areHookInputsEqual(nextDeps, prevDeps)) { /* 如果deps项没有发生变化，那么更新effect list就可以了，无须设置 HookHasEffect */
+        pushEffect(hookEffectTag, create, destroy, nextDeps);
+        return;
+    } 
+    /* 如果deps依赖项发生改变，赋予 effectTag ，在commit节点，就会再次执行我们的effect  */
+    currentlyRenderingFiber.effectTag |= fiberEffectTag
+    hook.memoizedState = pushEffect(HookHasEffect | hookEffectTag,create,destroy,nextDeps)
+}
+```
+
+更新 effect 的过程非常简单：
+
+- 就是判断 deps 项有没有发生变化，如果没有发生变化，更新副作用链表就可以了；如果发生变化，更新链表同时，打执行副作用的标签：`fiber => fiberEffectTag，hook => HookHasEffect`。在 commit 阶段就会根据这些标签，重新执行副作用。
 
 ## React Fiber架构
 
