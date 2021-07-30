@@ -5,11 +5,11 @@
 注意合成事件在`React17`前后发生了变化：
 
 > 总的来说，React合成事件借鉴了原生的事件委托的思想，
->
+> 
 > 在 React 中，绝大部分的事件都不会被绑定在具体的元素上，而是统一被绑定在页面的 document 上。当事件在具体的 DOM 节点上被触发后，最终都会冒泡到 document 上，React 首先会对事件进行包装，把原生 DOM 事件包装成合成事件。然后document 上所绑定的统一事件处理程序会将事件分发到具体的组件实例。
->
+> 
 > 在`React17`之前，React 给 document 挂上事件监听；DOM 事件触发后冒泡到 document；React 把原生事件包装成合成事件；分发事件。
->
+> 
 > 在` React 17 `，事件委托不再挂在 document 上，而是挂在 DOM 容器上，也就是 `ReactDom.Render` 所调用的根节点上。
 
 ![image-20210307171736359](./pic/image-setState.png)
@@ -33,30 +33,3 @@
 如果同步更新了state，但是还没有执行render函数，那么state和props不能保持同步；
 
 + state和props不能保持一致性，会在开发中产生很多的问题；
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

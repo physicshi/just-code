@@ -10,6 +10,8 @@
   - [hooks原理](#hooks原理)
   - [hook必须放在顶层声明](#hook必须放在顶层声明)
   - [一些细节](#一些细节)
+- [useState](#usestate)
+  - [setState详解](#setstate详解)
 - [React Fiber架构](#react-fiber架构)
   - [fiberRoot和rootFiber](#fiberroot和rootfiber)
   - [整体流程](#整体流程)
@@ -141,15 +143,11 @@ react17之后，代理到`fiberRoot`上了。
 
 **每个`hooks`初始化的时候都会创建一个`hook`对象（`hook`对象也有`memoizedState`属性），然后用`hook`的`memoizedState`保存当前`effect`信息（或者state值）**。在`commit`阶段会更新这些副作用。
 
-
-
 ### hook必须放在顶层声明
 
 **因为hooks以链表形式存在，所以`useState`（包括其他的Hooks）都必须在`FunctionalComponent`的根作用域中声明，也就是不能在`if`或者循环中声明**。
 
 不然没办法保证hooks是按顺序执行的，可能某一次执行条件没有满足（对应的hooks没有执行），对于下一个`hooks`就会拿到错误的状态。
-
-
 
 > **最主要的原因就是你不能确保这些条件语句每次执行的次数是一样的**，也就是说如果第一次我们创建了`state1 => hook1, state2 => hook2, state3 => hook3`这样的对应关系之后，下一次执行因为`something`条件没达成，导致`useState(1)`没有执行，那么运行`useState(2)`的时候，拿到的`hook`对象是`state1`的，那么整个逻辑就乱套了，**所以这个条件是必须要遵守的！**
 
@@ -183,6 +181,79 @@ function updateEffect(create,deps){
 更新 effect 的过程非常简单：
 
 - 就是判断 deps 项有没有发生变化，如果没有发生变化，更新副作用链表就可以了；如果发生变化，更新链表同时，打执行副作用的标签：`fiber => fiberEffectTag，hook => HookHasEffect`。在 commit 阶段就会根据这些标签，重新执行副作用。
+
+## useState
+
+有一个问题：为什么`setState`会改变状态？
+
+实际上执行`setState`，本质上是在调用`dispatchAction`这个函数，每一次调用`dispatchAction`，就会在内部创建一个`update`对象，存放更新信息，然后将`update`放入待更新 `pending` 队列中。内部会通过一些`if...else..`判断如果当前的 `fiber` 有没有更新任务，如果当前 `fiber` 没有执行更新任务，那么会拿出上一次 `state` 和 这一次 `state` 进行对比，如果相同，那么直接`return`退出更新。如果不相同，那么发起更新调度任务。**这就解释了，为什么函数组件 `useState` 改变相同的值，组件不更新了。**
+
+### setState详解
+
+`setState` 本质就是 `dispatchAction` 。
+
+> react-reconciler/src/ReactFiberHooks.js
+
+这是第一次`useState`要做的事：
+
+```js
+function mountState(initialState){
+     const hook = mountWorkInProgressHook();
+    if (typeof initialState === 'function') {initialState = initialState() } // 如果 useState 第一个参数为函数，执行函数得到初始化state
+     hook.memoizedState = hook.baseState = initialState;
+    const queue = (hook.queue = { ... }); // 负责记录更新的各种状态。
+    const dispatch = (queue.dispatch = (dispatchAction.bind(  null,currentlyRenderingFiber,queue, ))) // dispatchAction 为更新调度的主要函数 
+    return [hook.memoizedState, dispatch];
+}
+```
+
+- 上面的 state 会被当前 hooks 的 `memoizedState` 保存下来，每一个 useState 都会创建一个 `queue` 里面保存了更新的信息。
+- 每一个 useState 都会创建一个更新函数，setState 本质上就是 dispatchAction，当前的 fiber 被 bind 绑定了固定的参数传入 dispatchAction 和 queue ，所以当用户触发 setState 的时候，能够直观反映出来自哪个 fiber 的更新。
+- 最后把 memoizedState dispatch 返回给开发者使用。
+
+接下来重点研究一下 `dispatchAction` ，底层是怎么处理更新逻辑的。
+
+```js
+// 该FunctionComponent对应的fiber以及hook.queue已经通过调用bind方法预先作为参数传入
+function dispatchAction(fiber, queue, action){
+    /* 第一步：创建一个 update，action会传入update中 */
+    const update = { ... }
+    const pending = queue.pending;
+    if (pending === null) {  /* 第一个待更新任务 */
+        update.next = update;
+    } else {  /* 已经有带更新任务 */
+       update.next = pending.next;
+       pending.next = update;
+    }
+    if( fiber === currentlyRenderingFiber ){
+        /* 说明当前fiber正在发生调和渲染更新，那么不需要更新 */
+    }else{
+       if(fiber.expirationTime === NoWork && (alternate === null || alternate.expirationTime === NoWork)){
+            const lastRenderedReducer = queue.lastRenderedReducer;
+            const currentState = queue.lastRenderedState;                 /* 上一次的state */
+            const eagerState = lastRenderedReducer(currentState, action); /* 这一次新的state */
+            if (is(eagerState, currentState)) {                           /* 如果每一个都改变相同的state，那么组件不更新 */
+               return 
+            }
+       }
+       scheduleUpdateOnFiber(fiber, expirationTime);    /* 发起调度更新 */
+    }
+}
+```
+
+每一次setState，会有：
+
+- 首先用户每一次调用 dispatchAction（比如如上触发 setState ）都会先创建一个 update ，然后把它放入待更新 pending 队列中。
+- 然后判断如果当前的 fiber 正在更新，那么也就不需要再更新了。
+- 反之，说明当前 fiber 没有更新任务，那么会拿出上一次 state 和 这一次 state 进行对比，如果相同，那么直接退出更新。如果不相同，那么发起更新调度任务。**这就解释了，为什么函数组件 useState 改变相同的值，组件不更新了。**
+
+> 当前的 fiber 正在更新：
+> 
+> `currentlyRenderingFiber`即`workInProgress`，`workInProgress`存在代表当前处于`render阶段`。
+> 
+> 触发`更新`时通过`bind`预先保存的`fiber`与`workInProgress`全等，代表本次`更新`发生于`FunctionComponent`对应`fiber`的`render阶段`。
+> 
+> 所以这是一个`render阶段`触发的`更新`，需要标记变量`didScheduleRenderPhaseUpdate`，后续单独处理。
 
 ## React Fiber架构
 
