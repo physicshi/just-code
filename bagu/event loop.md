@@ -1,3 +1,8 @@
+- [事件循环](#事件循环)
+  - [第一题](#第一题)
+  - [第二题](#第二题)
+  - [第三题](#第三题)
+
 ## 事件循环
 
 ### 第一题
@@ -21,9 +26,10 @@ async function errorFunc() {
   try {
     await Promise.reject("error!!!");
   } catch (e) {
-    console.log("error caught"); // 微1-3
+    console.log("error caught"); 
   }
   console.log("errorFunc");
+  // 注意
   return Promise.resolve("errorFunc success");
 }
 errorFunc().then((res) => console.log("errorFunc then res"));
@@ -124,8 +130,30 @@ script start ->async2 end -> promise ->script end -> async2 end1 ->promise1 -> p
 
 > async 函数会返回一个 Promise 对象，如果在函数中 return 一个直接量（普通变量），async 会把这个直接量通过 Promise.resolve() 封装成 Promise 对象。如果你返回了 promise 那就以你返回的 promise 为准。
 
-这里可能 async1 里面的逻辑有一丝混乱，**如果 await 后面直接跟的为一个变量，比如：await 1；这种情况的话相当于直接把 await 下一行的代码注册为一个微任务，可以简单理解为 promise.then(await 下面的代码)**。
+这里可能 async1 里面的逻辑有一丝混乱，**如果 await 后面直接跟的为一个变量，比如：await 1；这种情况的话相当于直接把 await 下一行的代码注册为一个微任务，可以简单理解为 promise.resolve(1).then(await 下面的代码)**。
 
-如果 await 后面跟的是一个异步函数的调用，await 下一行的代码会在本轮的最后执行。
+~~如果 await 后面跟的是一个异步函数的调用，await 下一行的代码会在本轮的最后执行。~~
 
-> 此时执行完 awit 并不先把 await 后面的代码注册到微任务队列中去，而是执行完 await 之后，直接跳出 async1 函数，执行其他代码。然后遇到 promise 的时候，把 promise.then 注册为微任务。其他代码执行完毕后，需要回到 async1 函数去执行剩下的代码，然后把 await 后面的代码注册到微任务队列当中，注意此时微任务队列中是有之前注册的微任务的。所以这种情况会先执行 async1 函数之外的微任务(promise1,promise2)，然后才执行 async1 内注册的微任务(async1 end). 可以理解为，这种情况下，await 后面的代码会在本轮循环的最后被执行.
+```js
+//resolve方法
+Promise.resolve = function(val) {
+    //返回值的情况在前文说过，可以在 Promise的使用一章找到
+    return new Promise((resolve,reject)=>{
+        if(val instanceof Promise){
+            val.then(val => {
+                resolve(val);
+            }, err => {
+                reject(err);
+            });
+        }else{
+            resolve(value);
+        }
+    }) 
+}
+```
+
+`promise.resolve().then(()=>{console.log()}).then(()=>{resolve()}).then(()=>{console.log()})`
+
+`promise.resolve().then();promise.resolve().then()`
+
+> ~~此时执行完 await 并不先把 await 下一行的代码注册到微任务队列中去，而是执行完 await 之后，直接跳出 async1 函数，执行其他代码。然后遇到 promise 的时候，把 promise.then 注册为微任务。其他代码执行完毕后，需要回到 async1 函数把 await 下一行的代码注册到微任务队列当中，注意此时微任务队列中是有之前注册的微任务的。所以这种情况会先执行 async1 函数之外的微任务(promise1,promise2)，然后才执行 async1 内注册的微任务(async1 end). 可以理解为，这种情况下，await 下一行的代码会在本轮循环的最后被执行。~~
