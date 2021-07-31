@@ -9,6 +9,9 @@
 - [react hooks原理](#react-hooks原理)
   - [hooks原理](#hooks原理)
   - [hook必须放在顶层声明](#hook必须放在顶层声明)
+  - [hooks的初始化和更新](#hooks的初始化和更新)
+    - [初始化](#初始化)
+    - [更新](#更新)
   - [一些细节](#一些细节)
 - [useState](#usestate)
   - [setState详解](#setstate详解)
@@ -18,7 +21,7 @@
     - [双缓存](#双缓存)
     - [渲染](#渲染)
       - [首次渲染](#首次渲染)
-      - [更新](#更新)
+      - [更新](#更新-1)
   - [时间切片](#时间切片)
     - [requestIdleCallback实现时间分片](#requestidlecallback实现时间分片)
     - [中断](#中断)
@@ -47,7 +50,7 @@ createElement接受三个参数，type用于标识节点的类型，比如div、
 
 一句话就够了：虚拟DOM并不是为了性能。
 
-JSX最终返回的是element对象，就是描述组件内容的数据结构，但是不包括组件在更新中的优先级、组件的状态、组件被打上的用于**Renderer**的`标记`等（这些都包括在fiber中）；
+`JSX`最终返回的是`element`对象，就是描述组件内容的数据结构，但是不包括组件在更新中的优先级、组件的状态、组件被打上的用于**Renderer**的`标记`等（这些都包括在fiber中）；
 
 所以，在组件`mount`时，`Reconciler`根据`JSX`返回的组件内容生成组件对应的`Fiber节点`。
 
@@ -56,6 +59,8 @@ JSX最终返回的是element对象，就是描述组件内容的数据结构，�
 `commit`时，只更新打上标记的`fiber`节点。
 
 至此，渲染结束。
+
+> 在 render 阶段，实际没有进行真正的 DOM 元素的增加，删除，React 把想要做的不同操作打成不同的 effectTag ，等到commit 阶段，统一处理这些副作用，包括 DOM 元素增删改，执行一些生命周期等。
 
 ## diff算法
 
@@ -121,11 +126,11 @@ react diff算法主要分为三个维度：
 
 ## react事件系统
 
-react事件在原生的DOM事件体系上封装了一个合成事件层。react事件系统采用委托机制，实现了统一的事件监听；
+`react`事件在原生的`DOM`事件体系上封装了一个合成事件层。`react`事件系统采用委托机制，实现了统一的事件监听；
 
-事件都不会被绑定在具体的元素上，而是统一被绑定在页面的 document 上。当事件在具体的 DOM 节点上被触发后，最终都会冒泡到 document 上，然后将事件分发到具体的组件实例。
+事件都不会被绑定在具体的元素上，而是统一被绑定在页面的 `document` 上。当事件在具体的 `DOM` 节点上被触发后，最终都会冒泡到 `document` 上，然后将事件分发到具体的组件实例。
 
-react17之后，代理到`fiberRoot`上了。
+`react17`之后，代理到`fiberRoot`上了。
 
 <img src="./img/event.png" />
 
@@ -135,21 +140,87 @@ react17之后，代理到`fiberRoot`上了。
 
 ## react hooks原理
 
+**对于类组件来说，底层只需要实例化一次，实例中保存了组件的 state 等状态。对于每一次更新只需要调用 render 方法以及对应的生命周期就可以了。但是在函数组件中，每一次更新都是一次新的函数执行，一次函数组件的更新，里面的变量会重新声明。**
+
+为了能让函数组件可以保存一些状态，执行一些副作用钩子，React Hooks 应运而生，它可以帮助记录 React 中组件的状态，处理一些额外的副作用。
+
+> 更新时会重新执行`hook`的逻辑，并且将状态更新到`hook`的`memoiezState`。
+> 
+> 比如`useState()`括号中传入的初始值只有在第一次渲染时会用到，之后都会取`workInProgressHook`的`memoizedstate`   作为下一次更新的初始数据执行`hooks`函数，并且更新到`workInProgressHook`的`memoizedstate`
+
 ### hooks原理
 
-函数组件本身作为一个函数是没办法保存状态的，我们真正的状态存储在节点上，即`FiberNode`的`memoizedState`属性上。
+函数组件本身作为一个函数是没办法保存状态的，我们真正的状态存储在`hook`的`memoizedState`属性上。
+
+> 组件更新，需要 `hooks` 去获取或者更新维护状态。
 
 函数组件的`memoizedState`属性保存的是对应`fiber`的`hooks`链表（`Hook`对象有一个`next`属性，指向下一次`useXXX`对应的Hook对象）。
 
-**每个`hooks`初始化的时候都会创建一个`hook`对象（`hook`对象也有`memoizedState`属性），然后用`hook`的`memoizedState`保存当前`effect`信息（或者state值）**。在`commit`阶段会更新这些副作用。
+**每个`hooks`执行的时候都会创建一个`hook`对象（`hook`对象也有`memoizedState`属性），然后用`hook`的`memoizedState`保存当前`effect`信息（或者state值）**。在`commit`阶段会更新这些副作用。
+
+> 这里`hook`的`memoizedState`保存当前`effect`信息（或者`state`值）
+> 
+> `hooks` 内部够读取到当前 `fiber` 信息，因为 `currentlyRenderingFiber` ，函数组件初始化已经把当前 `fiber` 赋值给 `currentlyRenderingFiber` ，每个 `hooks` 内部读取的就是 `currentlyRenderingFiber` 的内容。
+
+```js
+// react-reconciler/src/ReactFiberHooks.js
+
+function mountWorkInProgressHook() {
+  const hook = {  memoizedState: null, baseState: null, baseQueue: null,queue: null, next: null,};
+  if (workInProgressHook === null) {  // 只有一个 hooks，取hook链表的第一个
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
+  } else {  // 有多个 hooks
+    workInProgressHook = workInProgressHook.next = hook;
+  }
+  return workInProgressHook;
+}
+```
+
+> **memoizedState**：`useState`中 保存 `state`信息 ｜ `useEffect` 中 保存着 `effect` 对象 ｜ `useMemo` 中 保存的是缓存的值和`deps` ｜ `useRef`中保存的是`ref` 对象
+> 
+> **baseQueue** : `usestate`和`useReducer`中 保存最新的更新队列。
+> 
+> **baseState** ： `usestate`和`useReducer`中,一次更新中 ，产生的最新`state`值。
+> 
+> **queue** ： 保存待更新队列 `pendingQueue` ，更新函数 `dispatch` 等信息。
+> 
+> **next**: 指向下一个 `hooks`对象。
+
+首先函数组件对应 `fiber` 用 `memoizedState` 保存 `hooks` 信息，每一个 `hooks` 执行都会产生一个 `hooks` 对象，`hooks` 对象中，保存着当前 `hooks` 的信息（比如`state`，或者`effect`的逻辑），不同 `hooks` 保存的形式不同。每一个 `hooks` 通过 `next` 链表建立起关系。
 
 ### hook必须放在顶层声明
 
-**因为hooks以链表形式存在，所以`useState`（包括其他的Hooks）都必须在`FunctionalComponent`的根作用域中声明，也就是不能在`if`或者循环中声明**。
+**因为`hooks`以链表形式存在，所以`useState`（包括其他的Hooks）都必须在`FunctionalComponent`的根作用域中声明，也就是不能在`if`或者循环中声明**。
 
 不然没办法保证hooks是按顺序执行的，可能某一次执行条件没有满足（对应的hooks没有执行），对于下一个`hooks`就会拿到错误的状态。
 
 > **最主要的原因就是你不能确保这些条件语句每次执行的次数是一样的**，也就是说如果第一次我们创建了`state1 => hook1, state2 => hook2, state3 => hook3`这样的对应关系之后，下一次执行因为`something`条件没达成，导致`useState(1)`没有执行，那么运行`useState(2)`的时候，拿到的`hook`对象是`state1`的，那么整个逻辑就乱套了，**所以这个条件是必须要遵守的！**
+
+### hooks的初始化和更新
+
+#### 初始化
+
+初始化阶段，在一个函数组件第一次渲染执行上下文过程中，每个`hooks`执行，都会产生一个`hook`对象，并形成链表结构，绑定在`workInProgress`的`memoizedState`属性上，然后`hooks`上的状态，绑定在当前`hooks`对象的`memoizedState`属性上。对于`effect`副作用钩子，会绑定在`workInProgress.updateQueue`上，等到`commit`阶段，`dom`树构建完成，再执行每个 `effect` 副作用钩子。
+
+> `mountWorkInProgressHook()`
+
+#### 更新
+
++ 复制链表关系
+
++ 复制每一个`hook`信息
+
++ 执行`hook`逻辑
+
++ 更新到`hook`的`memoizedstate`
+
+对于更新阶段，说明上一次 `workInProgress` 树已经赋变成了 `current` 树。存放`hooks`链表信息的`memoizedState`此时已经存在`current`树上，`react`对于`hooks`的处理逻辑和`fiber`树逻辑类似。
+
+> 会首先取出 `workInProgres.alternate` （也就是`current fiber`树）里面对应的 `hooks` ，然后根据之前的 `hooks` 复制一份，形成新的 `hooks` 链表关系。
+
+对于一次函数组件更新，当再次执行`hooks`函数的时候，比如 `useState(0) `，首先要从`current`的`hooks`中找到与当前`workInProgressHook`对应的`currentHooks`，然后复制一份`currentHooks`给`workInProgressHook`，接下来`hooks`函数执行的时候，把最新的状态更新到`workInProgressHook`的`memoizedstate`，保证`hooks`状态不丢失。
+
+> `updateWorkInProgressHook()`
 
 ### 一些细节
 
@@ -163,7 +234,7 @@ react17之后，代理到`fiberRoot`上了。
 
 比如：
 
-对于  useEffect 更新流程，无非判断是否执行下一次的 effect 副作用函数：
+对于  `useEffect` 更新流程，无非判断是否执行下一次的 `effect` 副作用函数：
 
 ```js
 function updateEffect(create,deps){
@@ -180,7 +251,7 @@ function updateEffect(create,deps){
 
 更新 effect 的过程非常简单：
 
-- 就是判断 deps 项有没有发生变化，如果没有发生变化，更新副作用链表就可以了；如果发生变化，更新链表同时，打执行副作用的标签：`fiber => fiberEffectTag，hook => HookHasEffect`。在 commit 阶段就会根据这些标签，重新执行副作用。
+- 就是判断 deps 项有没有发生变化，如果没有发生变化，更新副作用链表就可以了；如果发生变化，更新链表同时，打执行副作用的标签：`fiber => fiberEffectTag，hook => HookHasEffect`。在 `commit` 阶段就会根据这些标签，重新执行副作用。
 
 ## useState
 
