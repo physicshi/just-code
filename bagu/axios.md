@@ -33,7 +33,7 @@
 ```js
 // /cancel/CancelToken.js  -  11行
 function CancelToken(executor) {
- 
+
   var resolvePromise;
   this.promise = new Promise(function promiseExecutor(resolve) {
     resolvePromise = resolve;
@@ -109,5 +109,3 @@ axios.get(url, {
 });
 source.cancel('取消日志');
 ```
-
-

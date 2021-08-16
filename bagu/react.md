@@ -1,21 +1,32 @@
 - [说一下JSX](#说一下jsx)
+
 - [虚拟DOM](#虚拟dom)
+
 - [diff算法](#diff算法)
+
 - [react生命周期](#react生命周期)
+  
   - [挂载期](#挂载期)
   - [更新期](#更新期)
   - [卸载期](#卸载期)
+
 - [react事件系统](#react事件系统)
+
 - [react hooks原理](#react-hooks原理)
+  
   - [hooks原理](#hooks原理)
   - [hook必须放在顶层声明](#hook必须放在顶层声明)
   - [hooks的初始化和更新](#hooks的初始化和更新)
     - [初始化](#初始化)
     - [更新](#更新)
   - [一些细节](#一些细节)
+
 - [useState](#usestate)
+  
   - [setState详解](#setstate详解)
+
 - [React Fiber架构](#react-fiber架构)
+  
   - [fiberRoot和rootFiber](#fiberroot和rootfiber)
   - [整体流程](#整体流程)
     - [双缓存](#双缓存)
@@ -26,6 +37,7 @@
     - [requestIdleCallback实现时间分片](#requestidlecallback实现时间分片)
     - [中断](#中断)
     - [总结](#总结)
+
 - [redux](#redux)
 
 ## 说一下JSX
@@ -84,15 +96,17 @@ react diff算法主要分为三个维度：
 
 生命周期主要分为三个阶段：挂载期、更新期、卸载期；
 
+<img src="./img/life.png" />
+
 ### 挂载期
 
 首先是挂载阶段，也就是初始化渲染，会经历
 
 + `constructor()`初始化状态
 
-+ `getDerivedStateFromProps()`利用`props`更新`state`，接收来自父组件的`props`以及自身`state`两个参数，**返回一个对象作为更新组件的`stat`**
-  
-  + `render()`把需要更新的内容返回出来（真实的`DOM`渲染会经过`ReactDom.render`完成）
++ `getDerivedStateFromProps()`利用`props`更新`state`，接收来自父组件的`props`以及自身`state`两个参数，**返回一个对象作为更新组件的`state`**
+
++ `render()`把需要更新的内容返回出来（真实的`DOM`渲染会经过`ReactDom.render`完成）
 
 + 最后是`componentDidMount()`会在渲染结束后被触发
 
@@ -507,7 +521,7 @@ workInProgressFiber.alternate === currentFiber;
 
 `时间切片`的本质是模拟实现requestIdleCallback。
 
-我们把两个执行帧之间的空闲期叫做时间片。requestIdleCallback就是浏览器在两个执行帧之间的空闲期调用的回调函数（对于不支持这个API的浏览器，react会自己实现一个）。
+我们把两个执行帧之间的空闲期叫做时间片。`requestIdleCallback`就是浏览器在两个执行帧之间的空闲期调用的回调函数（对于不支持这个API的浏览器，react会自己实现一个）。
 
 当浏览器繁忙的时候，这时候requestIdleCallback回调可能不会被执行，可以通过requestIdleCallback的第二个参数指定一个超时时间。超时就强制执行requestIdleCallback。
 

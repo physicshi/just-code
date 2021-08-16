@@ -20,11 +20,7 @@
 
 ## 详解模块化
 
-
-
 ## `Nodejs`的事件循环
-
-
 
 ## `http`模块
 
@@ -87,25 +83,25 @@ server.listen(8888,"127.0.0.1",()=>{
 `listen`方法有三个参数：
 
 + 端口`port`：可以不传，系统会默认分配端；
-
+  
   > 可以在回调中利用`console.log(server.address().port)`拿到默认分配的端口号；
 
-+ 主机host：通常可以传入`localhost`、`ip`地址127.0.0.1、或者`ip`地址`0.0.0.0`，默认是`0.0.0.0`；
-
++ 主机`host`：通常可以传入`localhost`、`ip`地址127.0.0.1、或者`ip`地址`0.0.0.0`，默认是`0.0.0.0`；
+  
   + `localhost`：本质上是一个域名，通常情况下会被解析成`127.0.0.1`；
-
+  
   + `127.0.0.1`：回环地址（`Loop Back Address`），表达的意思其实是我们主机自己发出去的包，直接被自己接收；
-
+    
     + 正常的数据库包经常应用层- 传输层- 网络层- 数据链路层- 物理层；
-
+    
     + 而回环地址，是在网络层直接就被获取到了，是不会经过数据链路层和物理层的；
-
+      
       > 比如我们监听127.0.0.1时，在同一个网段下的主机中，通过`ip`地址是不能访问的；
-
+  
   + `0.0.0.0`：
-
+    
     + 监听`IPV4`上所有的地址，再根据端口找到不同的应用程序；
-
+      
       > 比如我们监听`0.0.0.0`时，在同一个网段下的主机中，通过`ip`地址是可以访问的；
 
 + 回调函数：服务器启动成功时的回调函数；
@@ -126,7 +122,7 @@ Node会封装一个`request`对象，包含了客户端向服务器发送的所�
 const http=require("http");
 const server=http.createServer((req,res)=>{
     if(req.url==="/login"){
-       	res.end("欢迎回来~")
+           res.end("欢迎回来~")
        }else if(req.url==="/products"){
          res.end("商品页~")  
        }else{
@@ -147,12 +143,11 @@ const url=require("url");
 const server=http.createServer((req,res)=>{
     console.log(url.parse(req.url))
     res.end("hello server");
-    
 });
 
 server.listen(8000,()=>{
     console.log("服务器启动成功!")
-   
+
 })
 ```
 
@@ -193,11 +188,11 @@ const server=http.createServer((req,res)=>{
 
 server.listen(8000,()=>{
     console.log("服务器启动成功!")
-   
+
 })
 ```
 
-####　请求方法
+#### 请求方法
 
 我们可以通过`req.method`来判断请求方式。
 
@@ -230,11 +225,11 @@ server.listen(8888,"0.0.0.0",()=>{
 ```
 
 > 流是一种以高效的方式处理读/写文件、网络通信、或任何类型的端到端的信息交换。
->
+> 
 > 在传统的方式中，当告诉程序读取文件时，这会将文件从头到尾读入内存，然后进行处理。使用流，则可以逐个片段地读取并处理（而无需全部保存在内存中）。
->
+> 
 > 相对于使用其他的数据处理方法，流基本上提供了两个主要优点：
->
+> 
 > - **内存效率**: 无需加载大量的数据到内存中即可进行处理。
 > - **时间效率**: 当获得数据之后即可立即开始处理数据，这样所需的时间更少，而不必等到整个数据有效负载可用才开始。
 
@@ -287,12 +282,14 @@ res.writeHead(200,{"Content-Type":"application/json;charset=utf8"})
 + `Web`框架的主流思路都是`MVC`
 
 + `Model`处理数据相关逻辑
+
 + `View`处理视图相关逻辑，前后分离之后，`View`不重要（都交给前端完成了）
+
 + `Controller`负责其他逻辑
 
 在我看来，这就是`web`框架的全部了。
 
-具体到`nodjs`，我们的web框架就是基于nodjs API的封装，我们的代码既可以基于`web`框架也可以基于其底层的`nodejsAPI`；不管是基于什么，最终的目的都是对浏览器发来的`http`请求作出响应；连接 `mysql`数据库，向`mysql`数据库发送`sql`语句，然后`mysql`服务器返回对应的数据；或者向`redis`服务器发送请求，然后`redis`服务器就会返回对应的数据结果；或者是向其他的`web`服务器发送请求，接收对应服务器的响应（比如爬虫）。
+具体到`nodejs`，我们的web框架就是基于nodejs API的封装，我们的代码既可以基于`web`框架也可以基于其底层的`nodejsAPI`；不管是基于什么，最终的目的都是对浏览器发来的`http`请求作出响应；连接 `mysql`数据库，向`mysql`数据库发送`sql`语句，然后`mysql`服务器返回对应的数据；或者向`redis`服务器发送请求，然后`redis`服务器就会返回对应的数据结果；或者是向其他的`web`服务器发送请求，接收对应服务器的响应（比如爬虫）。
 
 ### hello express
 
@@ -301,8 +298,6 @@ git init
 npm init
 npm i express
 ```
-
-
 
 ```js
 const express=require("express");
@@ -385,7 +380,7 @@ app.listen(3000,()=>{
 
 ```js
 app.use(async (ctx, next) => {
-  
+
   await next(); 
   const time = ctx.response.get('X-Response-Time');//读取res.header
   console.log(`${ctx.url} - ${time}`);
@@ -407,52 +402,3 @@ app.use(async ctx => {
 > 一个八卦：经常看到的洋葱模型的图，实际上是python的一个web框架Pylons的（2010）...
 
 还有好多好多API，看文档就好
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

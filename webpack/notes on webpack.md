@@ -36,8 +36,7 @@ npm install webpack webpack-cli -D #局部(开发依赖)安装 -D 是--save-dev
   + 在目录下直接执行webpack 命令
 + 生成一个dist文件夹，里面存放一个main.js的文件，就是我们打包之后的文件：
   + 这个文件中的代码被压缩和丑化了；
-  + 另外我们发现代码中依然存在ES6的语法，比如箭头函数、const等，这是因为默认情况下webpack并不清楚
-    我们打包后的文件是否需要转成ES5之前的语法，后续我们需要通过babel来进行转换和设置；
+  + 另外我们发现代码中依然存在ES6的语法，比如箭头函数、const等，这是因为默认情况下webpack并不清楚我们打包后的文件是否需要转成ES5之前的语法，后续我们需要通过babel来进行转换和设置；
 + 我们发现是可以正常进行打包的，但是有一个问题，webpack是如何确定我们的入口的呢？
   + 事实上，当我们运行webpack时，webpack会查找当前目录下的src/index.js作为入口；
   + 所以，如果当前项目中没有存在src/index.js文件，那么会报错；
@@ -47,13 +46,13 @@ npm install webpack webpack-cli -D #局部(开发依赖)安装 -D 是--save-dev
 因为通常打包一个项目是非常复杂的，我们需要进行一些配置，需要在根目录下创建`webpack.config.js`的文件，作为webpack的配置文件：
 
 > Mode配置选项，可以告知webpack使用响应模式的内置优化：
->
+> 
 > + 默认值是production（什么都不设置的情况下）；
 > + 可选值有：'none' | 'development' | 'production'；
->
+> 
 > <img src="./img/mode.png"/>
 
-```JS
+```js
 const path = require("path");
 
 //导出配置信息
@@ -78,9 +77,7 @@ MODULE.EXPORTS = {
 
 然后执行npm run build便可以进行打包。
 
-
-
-##　webpack依赖图
+## webpack依赖图
 
 webpack在处理应用程序时，它会根据命令或者配置文件找到入口文件；
 
@@ -95,7 +92,7 @@ webpack在处理应用程序时，它会根据命令或者配置文件找到入�
 
 如果我们直接引入一个元素，并且给他一些样式，然后执行`npm run build`，我们会发现报错信息：模块解析失败、你需要一个合适的loader来处理这个文件类型。
 
-```JS
+```js
 // src/index.js
 import "./css/style.css"
 
@@ -103,7 +100,7 @@ const component() {
     const element = document.createElement("div");
     element.innerHTML = ["hello","webpack"].join(" ");
     element.className = "content";
-    
+
     return elemrnt;
 }
 document.body.appendChild(component());
@@ -114,7 +111,7 @@ document.body.appendChild(component());
 }
 ```
 
-因为webpack只能识别 JS、JSON文件，所以我们需要一个loader来加载这个css文件，但是loader是什么呢？
+因为webpack只能识别 JS文件，所以我们需要一个loader来加载这个css文件，但是loader是什么呢？
 
 > 模块转换器，将所有类型的文件转为webpack可以处理的有效模块，然后可以利用webpack的打包能力，对他们进行处理
 
@@ -149,7 +146,7 @@ module.rules的配置如下：
       + options：可选的属性，值是一个字符串或者对象，值会被传入到loader中；
       + query：目前已经使用options来替代；
     + 传递字符串（如：use: [ 'style-loader' ]）是loader 属性的简写方式（如：use: [ { loader: 'style-loader'} ]）；
-  +  loader属性： Rule.use: [ { loader } ] 的简写。
+  + loader属性： Rule.use: [ { loader } ] 的简写。
 
 ```js
 module.exports = {
@@ -193,7 +190,7 @@ use: [
 
 + 当前目前我们的css是通过页内样式的方式添加进来的；
 
-####　处理`less`文件
+#### 处理`less`文件
 
 我们可以使用less-loader，来自动使用less工具转换less到css；
 `npm install less-loader -D`
@@ -276,6 +273,7 @@ module.exports = {
 在这里，我只是希望通过这个非常简单的插件带你体验一下 Webpack 插件的使用。一般来说，当我们有了某个自动化的需求过后，可以先去找到一个合适的插件，然后安装这个插件，最后将它配置到 Webpack 配置对象的 plugins 数组中，这个过程唯一有可能不一样的地方就是，有的插件可能需要有一些配置参数。
 
 ### 用于生成 HTML 的插件
+
 除了自动清理 dist 目录，我们还有一个非常常见的需求，就是自动生成使用打包结果的 HTML，所谓使用打包结果指的是在 HTML 中自动注入 Webpack 打包生成的 bundle。
 
 在使用接下来这个插件之前，我们的 HTML 文件一般都是通过硬编码的方式，单独存放在项目根目录下的，这种方式有两个问题：
@@ -303,7 +301,6 @@ HTML 中的 script 标签是自动引入的，所以可以确保资源文件的�
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 ```
 
-
 有了这个类型过后，回到配置对象的 plugins 属性中，同样需要添加一下这个类型的实例对象，完成这个插件的使用，具体配置代码如下：
 
 ```js
@@ -324,7 +321,6 @@ module.exports = {
 ```
 
 最后我们回到命令行终端，再次运行打包命令，此时打包过程中就会自动生成一个 index.html 文件到 dist 目录。我们找到这个文件，可以看到文件中的内容就是一段使用了 bundle.js 的空白 HTML，具体结果如下：
-
 
 至此，Webpack 就可以动态生成应用所需的 HTML 文件了，但是这里仍然存在一些需要改进的地方：
 
@@ -446,7 +442,9 @@ module.exports = {
 
 ## 代码分割
 
++ 多入口
 
++ 动态导入
 
 ## Tree shaking
 
@@ -455,21 +453,26 @@ module.exports = {
 > 移除未引用的死代码，极大的减少打包后bundle的体积
 
 + Tree Shaking是一个术语，在计算机中表示消除死代码（dead_code）；
+
 + 最早的想法起源于LISP，用于消除未调用的代码（纯函数无副作用，可以放心的消除，这也是为什么要求我们在进
   行函数式编程时，尽量使用纯函数的原因之一）；
-+ 后来Tree Shaking也被应用于其他的语言，比如JavaScript、Dart；
 
- JavaScript的Tree Shaking：
++ 后来Tree Shaking也被应用于其他的语言，比如JavaScript、Dart；
+  
+  JavaScript的Tree Shaking：
 
 + 对JavaScript进行Tree Shaking是源自打包工具rollup；
+
 + 这是因为Tree Shaking依赖于ES Module的静态语法分析（不执行任何的代码，可以明确知道模块的依赖关系）；
+
 + webpack2正式内置支持了ES2015模块，和检测未使用模块的能力；
+
 + 在webpack4正式扩展了这个能力，并且通过package.json的sideEffects属性作为标记，告知webpack在编译时，
   哪里文件可以安全的删除掉；
+
 + webpack5中，也提供了对部分CommonJS的tree shaking的支持；
+  
   + https://github.com/webpack/changelog-v5#commonjs-tree-shaking
-
-
 
 **使用 Webpack 生产模式打包的优化过程中，就使用自动开启这个功能，以此来检测我们代码中的未引用代码，然后自动移除它们。**
 
@@ -539,16 +542,14 @@ export const Heading = level => {
 npx webpack --mode=production
 ```
 
-
 Webpack 的 Tree-shaking 特性在生产模式下会自动开启。打包完成以后我们打开输出的 bundle.js，通过搜索你会发现，components 模块中冗余的代码根本没有输出。这就是经过 Tree-shaking 处理过后的效果。
 
 试想一下，如果我们在项目中引入 Lodash 这种工具库，大部分情况下我们只会使用其中的某几个工具函数，而其他没有用到的部分就是冗余代码。通过 Tree-shaking 就可以极大地减少最终打包后 bundle 的体积。
 
 需要注意的是，Tree-shaking 并不是指 Webpack 中的某一个配置选项，而是一组功能搭配使用过后实现的效果，这组功能在生产模式下都会自动启用，所以使用生产模式打包就会有 Tree-shaking 的效果。
 
-
-
 ### 开启 Tree Shaking
+
 这里再来介绍一下在其他模式下，如何一步一步手动开启 Tree-shaking。通过这个过程，还可以顺便了解 Tree-shaking 的工作过程和 Webpack 其他的一些优化功能。
 
 我们再次运行 Webpack 打包，不过这一次我们不再使用 production 模式，而是使用 none，也就是不开启任何内置功能和插件，具体命令如下：
@@ -573,7 +574,6 @@ module.exports = {
   }
 }
 ```
-
 
 配置完成后，重新打包，然后我们再来看一下输出的 bundle.js，此时你会发现 components 模块所对应的函数，就不再导出 Link 和 Heading 这两个函数了，那它们对应的代码就变成了未引用代码。而且如果你使用的是 VS Code，会发现 VS Code 将这两个函数名的颜色变淡了，这是为了表示它们未被引用。
 
@@ -607,6 +607,7 @@ module.exports = {
 + minimize 的作用就是负责把枯树枝、枯树叶摇下来。
 
 ### 合并模块（扩展）
+
 除了 usedExports 选项之外，我们还可以使用一个 concatenateModules 选项继续优化输出。
 
 普通打包只是将一个模块最终放入一个单独的函数中，如果我们的模块很多，就意味着在输出结果中会有很多的模块函数。
@@ -643,8 +644,6 @@ Tree-shaking 实现的前提是 ES Modules，也就是说：最终交给 Webpack
 我们都知道 Webpack 在打包所有的模块代码之前，先是将模块根据配置交给不同的 Loader 处理，最后再将 Loader 处理的结果打包到一起。
 
 很多时候，我们为了更好的兼容性，会选择使用 babel-loader 去转换我们源代码中的一些 ECMAScript 的新特性。而 Babel 在转换 JS 代码时，很有可能处理掉我们代码中的 ES Modules 部分，把它们转换成 CommonJS 的方式。
-
-
 
 当然了，Babel 具体会不会处理 ES Modules 代码，取决于我们有没有为它配置使用转换 ES Modules 的插件。
 
@@ -683,7 +682,6 @@ module.exports = {
 }
 ```
 
-
 配置完成过后，我们打开命令行终端，运行 Webpack 打包命令，然后再找到 bundle.js，仔细查看你会发现，结果并不是像刚刚说的那样，这里 usedExports 功能仍然正常工作了，此时，如果我们压缩代码，这些未引用的代码依然会被移除。这也就说明 Tree-shaking 并没有失效。
 
 我们也可以在 babel-loader 的配置中强制开启 ES Modules 转换插件来试一下，具体配置如下：
@@ -717,7 +715,6 @@ module.exports = {
 }
 ```
 
-
 给 Babel preset 添加配置的方式比较特别，这里很多人都会配错，一定要注意。它需要把预设数组中的成员定义成一个数组，然后这个数组中的第一个成员就是所使用的 preset 的名称，第二个成员就是给这个 preset 定义的配置对象。
 
 我们在这个对象中将 modules 属性设置为 "commonjs"，默认这个属性是 auto，也就是根据环境判断是否开启 ES Modules 插件，我们设置为 commonjs 就表示我们强制使用 Babel 的 ES Modules 插件把代码中的 ES Modules 转换为 CommonJS。
@@ -729,6 +726,7 @@ module.exports = {
 另外，我们刚刚探索的过程也值得你仔细再去琢磨一下，通过这样的探索能够帮助你了解很多背后的原因，做到“知其然，知其所以然”。
 
 ### sideEffects
+
 Webpack 4 中新增了一个 sideEffects 特性，它允许我们通过配置标识我们的代码是否有副作用，从而提供更大的压缩空间。
 
 TIPS：模块的副作用指的就是模块执行的时候除了导出成员，是否还做了其他的事情。
@@ -760,7 +758,6 @@ export { default as Link } from './link'
 export { default as Heading } from './heading'
 ```
 
-
 这也是我们经常见到一种同类文件的组织方式。另外，在每个组件中，我们都添加了一个 console 操作（副作用代码），具体代码如下：
 
 ```js
@@ -772,8 +769,6 @@ export default () => {
 }
 ```
 
-
-
 我们再到打包入口文件（main.js）中去载入 components 中的 Button 成员，具体代码如下：
 
 ```js
@@ -781,7 +776,6 @@ export default () => {
 import { Button } from './components'
 document.body.appendChild(Button())
 ```
-
 
 那这样就会出现一个问题，虽然我们在这里只是希望载入 Button 模块，但实际上载入的是 components/index.js，而 index.js 中又载入了这个目录中全部的组件模块，这就会导致所有组件模块都会被加载执行。
 
@@ -794,6 +788,7 @@ document.body.appendChild(Button())
 所以说，**Tree-shaking 只能移除没有用到的代码成员，而想要完整移除没有用到的模块，那就需要开启 sideEffects 特性了。**
 
 #### sideEffects 作用
+
 我们打开 Webpack 的配置文件，在 optimization 中开启 sideEffects 特性，具体配置如下：
 
 ```js
@@ -809,7 +804,6 @@ module.exports = {
   }
 }
 ```
-
 
 **TIPS：注意这个特性在 production 模式下同样会自动开启。**
 
@@ -834,7 +828,6 @@ module.exports = {
 }
 ```
 
-
 这样就表示我们这个项目中的所有代码都没有副作用，让 Webpack 放心大胆地去“干”。
 
 完成以后我们再次运行打包，然后同样找到打包输出的 bundle.js 文件，此时那些没有用到的模块就彻底不会被打包进来了。那这就是 sideEffects 的作用。
@@ -847,6 +840,7 @@ module.exports = {
 目前很多第三方的库或者框架都已经使用了 sideEffects 标识，所以我们再也不用担心为了一个小功能引入一个很大体积的库了。例如，某个 UI 组件库中只有一两个组件会用到，那只要它支持 sideEffects，你就可以放心大胆的直接用了。
 
 #### sideEffects 注意
+
 使用 sideEffects 这个功能的前提是确定你的代码没有副作用，或者副作用代码没有全局影响，否则打包时就会误删掉你那些有意义的副作用代码。
 
 例如，我这里准备的 extend.js 模块：
@@ -860,7 +854,6 @@ Number.prototype.pad = function (size) {
 }
 ```
 
-
 在这个模块中并没有导出任何成员，仅仅是在 Number 的原型上挂载了一个 pad 方法，用来为数字添加前面的导零，这是一种很早以前常见的基于原型的扩展方法。
 
 我们回到 main.js 中去导入 extend 模块，具体代码如下：
@@ -871,7 +864,6 @@ import './extend' // 内部包含影响全局的副作用
 
 console.log((8).pad(3)) // => '0008'
 ```
-
 
 因为这个模块确实没有导出任何成员，所以这里也就不需要提取任何成员。导入过后就可以使用它为 Number 提供扩展方法了。
 
@@ -909,10 +901,10 @@ console.log((8).pad(3)) // => '0008'
 }
 ```
 
-
 这样 Webpack 的 sideEffects 就不会忽略确实有必要的副作用模块了。
 
 ### 写在最后
+
 最后我们来总结一下，今天介绍到了两个 Webpack 中的高级特性，分别是 Tree-shaking 和 sideEffects。
 
 **Tree-shaking 只能移除没有用到的代码成员，而想要完整移除没有用到的模块，那就需要开启 sideEffects 特性了。**
