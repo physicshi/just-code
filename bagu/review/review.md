@@ -1470,7 +1470,9 @@ Function.prototype.bind = function (context){
 }    
 ```
 
-## CSS扇形还有三角形
+## CSS
+
+## 半圆
 
 ### 三角形
 
@@ -1742,8 +1744,6 @@ var o =　{0:42,1:52,2:63,length:3}
 console.log(Array.from(o)) // [42,52,63]
 ```
 
-## 操作系统
-
 ## 死锁
 
 死锁是多个进程在并发执行过程中因抢夺不可抢占资源而造成的阻塞现象。
@@ -1807,3 +1807,558 @@ console.log(Array.from(o)) // [42,52,63]
 + 多态
   
   + 多态就是相同的事物，调用其相同的方法，参数也相同时，但表现的行为却不同。多态的表现形式重写与重载。
+
+## 原型、原型链
+
+首先明确原型、原型链的概念：
+
+每一个函数都有一个`prototype`属性，指向这个构造函数的原型对象，这个原型对象有一个`constructor`属性指回构造函数；同时，每个实例对象都有一个`__proto__`属性，指向构造函数的原型对象；同时该原型对象也有一个`__proto__`属性，指向自己的原型。
+
+> 直到有一个`__proto__`指向`null`
+
+我们`new`一个对象，每个对象都会从原型继承属性。
+
+注意：原型对象是`Object`这个构造函数创建的；而`Object`作为一个函数对象又是`Function` 创建的
+
+<img src="./img/prototype.png" />
+
+## 深拷贝的原理
+
+## 范型
+
+其实泛型就是类型参数化，通常用尖括号`<>`语法来定义函数的范型参数。
+
+范型是一个非常灵活的概念，就是类型参数化，可以用来约束函数、类、接口；
+
+### 范型的使用场景
+
+#### 约束函数参数的类型
+
+约束函数参数的类型（可以给函数定义若干个被调用时才会传入明确类型的参数。）
+
+比如：
+
+> `useState`的用法
+
+```ts
+function reflect<T>(params: T): T{
+    return params
+}
+
+// 用起来就是这样
+const reflectStr = reflect<string>('string'); // str 类型是 string
+const reflectNum = reflect<number>(1); // num 类型 number
+```
+
+泛型不仅可以约束函数整个参数的类型，还可以约束参数`key`、`value`的类型，比如参数的类型可以是数组、对象：
+
+```ts
+function reflect<T>(params: P[]){
+    return params
+}
+
+
+// reflectArr 是 (string | number)[]
+const reflectArr = reflectArray([1, '1']); 
+```
+
+最经典的还是`react`里的定义：
+
+```js
+function useState<S>(state: S, initialValue?: S) {
+  return [state, (s: S) => void 0] as unknown as [S, (s: S) => void];
+}
+```
+
+`return` 的结果的第一个元素的类型就是泛型 `S`，第二个函数的参数类型也是泛型 `S`。
+
+#### 范型类
+
+用范型来约束类的属性和方法：
+
+```ts
+class MyType<S> {
+    store:S;
+    constructor(stores : S){
+        this.store=stores;
+    }
+    set(stores:S){
+        this.store = stores;
+    }
+    get(){
+        return this.store
+    }
+}
+
+
+
+// 使用
+const numMemory = new MyType<number>(1); // <number> 可缺省
+const getNumMemory = numMemory.get(); // 类型是 number
+numMemory.set(2); // 只能写入 number 类型
+const strMemory = new MyType(''); // 缺省 <string>
+const getStrMemory = strMemory.get(); // 类型是 string
+strMemory.set('string'); // 只能写入 string 类型
+```
+
+#### 范型类型
+
+**终极目的是范型接口**
+
+类型本身就可以由范型来定义
+
+```ts
+// reflectFn 的类型是 <P>(param: P) => P
+const reflectFn: <P>(param: P) => P = reflect;
+```
+
+> 这里我们为变量 reflectFn 显式添加了泛型类型注解，并将 reflect 函数作为值赋给了它。
+
+这样就可以提出一个接口或者类型别名来描述这个类型：
+
+```ts
+type ReflectFuncton = <P>(param: P) => P;
+interface IReflectFuncton {
+  <P>(param: P): P
+}
+const reflectFn2: ReflectFuncton = reflect;
+const reflectFn3: IReflectFuncton = reflect;
+```
+
+进一步可以将泛型参数当作整个接口的一个参数，这样我们在用这个接口的时候就可以显示声明参数类型（比如： `Dictionary<string>而不只是Dictionary`），也可以知道接口里的其他成员的参数的类型了。
+
+```ts
+interface IGenericIdentityFn<T> {
+    (arg: T): T;
+}
+
+function identity<T>(arg: T): T {
+    return arg;
+}
+
+let myIdentity: IGenericIdentityFn<number> = identity;
+```
+
+注意，我们的示例做了少许改动。 不再描述泛型函数，而是把非泛型函数签名作为泛型类型一部分。 当我们使用 `GenericIdentityFn`的时候，还得传入一个类型参数来指定泛型类型（这里是：`number`），锁定了之后代码里使用的类型。 
+
+> 对于描述哪部分类型属于泛型部分来说，理解何时把参数放在调用签名里和何时放在接口上是很有帮助的。
+
+#### 范型约束
+
+限定范型的入参就是范型约束。
+
++ `泛型入参名 extends 类型`
+
++ `范型入参名 extends 接口`
+
+```ts
+// 限定泛型入参只能是 number | string | boolean 的子集
+// 泛型入参名 extends 类型
+function reflectSpecified<P extends number | string | boolean>(param: P):P {
+  return param;
+}
+reflectSpecified('string'); // ok
+reflectSpecified(1); // ok
+reflectSpecified(true); // ok
+reflectSpecified(null); // ts(2345) 'null' 不能赋予类型 'number | string | boolean'
+```
+
+也可以`范型入参 extends 接口`
+
+```ts
+interface ILengthwise {
+    length: number;
+}
+
+function loggingIdentity<T extends ILengthwise>(arg: T): T {
+    console.log(arg.length);  // Now we know it has a .length property, so no more error
+    return arg;
+}
+
+// 现在这个泛型函数被定义了约束，因此它不再是适用于任意类型：
+loggingIdentity(3);  // Error, number doesn't have a .length property
+
+// 需要传入符合约束类型的值，必须包含必须的属性：
+loggingIdentity({length: 10, value: 3});
+```
+
+## 位运算
+
+```
+>>1  等价于 /2
+<<1  等价于 *2
+// %取余
+// /取模
+```
+
+<img src="./img/bit.png" />
+
+> 异或遵循交换律和结合律
+>  a ^ 0 = a
+>  a ^ a = 0
+
+1. 使用&运算符判断一个数的奇偶
+
+```js
+// 偶数 & 1 = 0
+// 奇数 & 1 = 1
+console.log(2 & 1)    // 0
+console.log(3 & 1)    // 1
+复制代码
+```
+
+2. 使用`~, >>, <<, >>>, |`来取整
+
+```js
+console.log(~~ 6.83)    // 6
+console.log(6.83 >> 0)  // 6
+console.log(6.83 << 0)  // 6
+console.log(6.83 | 0)   // 6
+// >>>不可对负数取整
+console.log(6.83 >>> 0)   // 6
+复制代码
+```
+
+3. 使用`^`来完成值交换
+
+```js
+var a = 5
+var b = 8
+a ^= b
+b ^= a
+a ^= b
+console.log(a)   // 8
+console.log(b)   // 5
+复制代码
+```
+
+4. 使用`&, >>, |`来完成rgb值和16进制颜色值之间的转换
+
+```js
+/** * 16进制颜色值转RGB * @param  {String} hex 16进制颜色字符串 * @return {String}     RGB颜色字符串 */
+  function hexToRGB(hex) {
+    var hexx = hex.replace('#', '0x')
+    var r = hexx >> 16
+    var g = hexx >> 8 & 0xff
+    var b = hexx & 0xff
+    return `rgb(${r}, ${g}, ${b})`
+}
+
+/** * RGB颜色转16进制颜色 * @param  {String} rgb RGB进制颜色字符串 * @return {String}     16进制颜色字符串 */
+function RGBToHex(rgb) {
+    var rgbArr = rgb.split(/[^\d]+/)
+    var color = rgbArr[1]<<16 | rgbArr[2]<<8 | rgbArr[3]
+    return '#'+ color.toString(16)
+}
+// -------------------------------------------------
+hexToRGB('#ffffff')               // 'rgb(255,255,255)'
+RGBToHex('rgb(255,255,255)')      // '#ffffff'
+```
+
+## 0.1+0.2!==0.3
+
+在运算时会有两次精度损失：
+
++ 进制转换
+
++ 对阶运算
+
+首先0.1和0.2转成十进制会无限循环，本身标准里对尾数位数会有一个限制，所以多余的位会被截掉；
+
+第二点，由于指数位数不相同，运算时需要对阶运算，这部分也可能产生精度损失。
+
+> 关于浮点数的运算，一般由以下五个步骤完成：对阶、尾数运算、规格化、舍入处理、溢出判断。我们来简单看一下 0.1 和 0.2 的计算。
+> 
+> 首先是对阶，所谓对阶，就是把阶码调整为相同，比如 0.1 是 `1.1001100110011…… * 2^-4`，阶码是 -4，而 0.2 就是 `1.10011001100110...* 2^-3`，阶码是 -3，两个阶码不同，所以先调整为相同的阶码再进行计算，调整原则是小阶对大阶，也就是 0.1 的 -4 调整为 -3，对应变成 `0.11001100110011…… * 2^-3`
+> 
+> 接下来是尾数计算:
+> 
+> ```
+>   0.1100110011001100110011001100110011001100110011001101
+> + 1.1001100110011001100110011001100110011001100110011010
+> ————————————————————————————————————————————————————————
+>  10.0110011001100110011001100110011001100110011001100111
+> ```
+> 
+> 我们得到结果为 `10.0110011001100110011001100110011001100110011001100111 * 2^-3`
+> 
+> 将这个结果处理一下，即结果规格化，变成 `1.0011001100110011001100110011001100110011001100110011(1) * 2^-2`
+> 
+> 括号里的 1 意思是说计算后这个 1 超出了范围，所以要被舍弃了。
+> 
+> 再然后是舍入，四舍五入对应到二进制中，就是 0 舍 1 入，因为我们要把括号里的 1 丢了，所以这里会进一，结果变成
+> 
+> `1.0011001100110011001100110011001100110011001100110100 * 2^-2`
+> 
+> 本来还有一个溢出判断，因为这里不涉及，就不讲了。
+> 
+> 所以最终的结果存成 64 位就是
+> 
+> > 0 01111111101 0011001100110011001100110011001100110011001100110100
+> 
+> 将它转换为10进制数就得到 `0.30000000000000004440892098500626`
+> 
+> 因为两次存储时的精度丢失加上一次运算时的精度丢失，最终导致了 0.1 + 0.2 !== 0.3
+
+### 解决办法
+
+#### 第三方库
+
+`Math.js`
+
+专门为 `JavaScript` 和 `Node.js`提供的一个广泛的数学库。支持数字，大数字(超出安全数的数字)，复数，分数，单位和矩阵。 功能强大，易于使用。
+
+#### 数字转成整数
+
+这是最容易想到的方法，也相对简单
+
+```js
+function add(num1, num2) {
+ const num1Digits = (num1.toString().split('.')[1] || '').length;
+ const num2Digits = (num2.toString().split('.')[1] || '').length;
+ const baseNum = Math.pow(10, Math.max(num1Digits, num2Digits));
+ return (num1 * baseNum + num2 * baseNum) / baseNum;
+}
+```
+
+## JS执行上下文
+
+执行上下文可以理解为`JS`的运行环境，第一次载入`JS`代码，首先会创建一个全局环境（就是`main`函数对应的帧），直到程序退出才会被销毁（比如关闭浏览器）；随着函数一层层被调用，栈会一层层扩展；调用结束，栈又会一层层回溯，把内存释放回去。
+
+> 不同的函数运行环境不一样，即使是同一个函数，在被多次调用时也会创建多个不同的函数环境。
+
+执行上下文有三个重要的属性：
+
++ 作用域链（`scope chain`）
+
++ 变量对象（`Variable Object`，简称 `VO`）
+
++ `this`指向
+
+<img src="./img/context.png" />
+
+### 变量对象
+
+变量对象会保存这个上下文中定义的所有变量和函数。
+
+> 在浏览器中，全局环境的变量对象是`window`对象，因此所有的全局变量和函数都是作为`window`对象的属性和方法创建的。相应的，在 `Node` 中全局环境的变量对象则是`global`对象。
+
+创建变量对象将会创建`arguments`对象（仅函数环境下），同时会检查当前上下文的函数声明和变量声明：
+
++ 对于变量声明：此时会给变量分配内存，并将其初始化为`undefined`（该过程只进行定义声明，执行阶段才执行赋值语句）。
+
++ 对于函数声明：此时会在内存里创建函数对象，并且直接初始化为该函数对象。
+
+### 作用域链
+
+#### 作用域
+
+词法作用域中的变量，在定义时（写代码时）就会产生一个确定的作用域，这个作用域即当前的执行上下文，在 `ES5` 后我们使用词法环境（`Lexical Environment`）替代作用域来描述该执行上下文。因此，**词法环境可理解为我们常说的作用域，同样也指当前的执行上下文。**
+
+在 `JavaScript` 中，词法环境又分为词法环境（`Lexical Environment`）和变量环境（`Variable Environment`）两种，其中：
+
++ 变量环境用来记录`var/function`等变量声明；（这部分会有变量提升）
+
++ 词法环境用来记录`let/const/class`等变量声明。
+
+**`JavaScript` 实现了支持块级作用域的同时，不影响原有的变量声明和函数声明：**
+
+> 用两个词法环境一个支持`es6`后的块级作用域；一个支持`es5`的`var`和`function`声明
+
+创建变量过程中会进行函数提升和变量提升，`JavaScript` 会通过词法环境来记录函数和变量声明。通过使用两个词法环境（而不是一个）分别记录不同的变量声明内容。
+
+#### 作用域链
+
+作用域就是词法环境，而词法环境由两个成员组成。
+
++ 环境记录（`Environment Record`）：用于记录自身词法环境中的变量对象。
+
++ 外部词法环境引用（`Outer Lexical Environment`）：记录外层词法环境的引用。
+
+通过外部词法环境的引用，作用域可以层层拓展，建立起从里到外延伸的一条作用域链。当某个变量无法在自身词法环境记录中找到时，可以根据外部词法环境引用向外层进行寻找，直到最外层的词法环境中外部词法环境引用为`null`，这便是作用域链的变量查询。
+
+### this指向
+
+调用时确定。
+
+## 作用域
+
+所谓作用域就是变量可以被访问到的范围。
+
+`ES6`之前函数只有全局作用域和函数作用域（或者叫局部作用域），`ES6`之后，多了块级作用域。
+
+### 全局作用域
+
+在代码中任何地方都能被访问到。
+
++ `window`对象的属性
+
++ 最外层函数、最外层函数外面定义的变量
+
++ 所有末定义直接赋值的变量自动声明为拥有全局作用域
+
+```js
+var outVariable = "外层变量"
+function outFun2() {
+    var inVariable = "内层变量";
+    globalVariable = "全局变量"
+    console.log(outVariable) // "外层变量"
+}
+
+// 这是最外层函数，可以在任何地方都被调用
+outFun2();
+console.log(globalVariable) // "全局变量"
+console.log(inVariable); // Uncaught ReferenceError: inVariable is not defined
+```
+
+### 函数作用域
+
+是指声明在函数内部的变量，只能在函数内被访问到。
+
+**作用域是分层的，内层作用域可以访问外层作用域的变量，反之则不行**
+
+> 作用域链是在定义的时候创建的，就是写代码的那一刻就被确定了
+
+```js
+function doSomething(){
+    var blogName="浪里行舟";
+    function innerSay(){
+        var blog="123"
+        console.log(blog,blogName) // "123" "浪里行舟"
+    }
+    console.log("blog:",blog) // Uncaught ReferenceError: blog is not defined at doSomething
+    innerSay(); 
+}
+doSomething()
+console.log(blogName); // Uncaught ReferenceError: blogName is not defined
+innerSay(); // Uncaught ReferenceError: innerSay is not defined
+```
+
+```js
+var name = "789"
+function foo(){
+    var name = "123"
+    console.log(name) 
+    var name = "456"
+}
+var name = "101010"
+
+
+foo() // "123"
+```
+
+### 块级作用域
+
+> `JS` 的初学者经常需要花点时间才能习惯变量提升，而如果不理解这种特有行为，就可能导致 `bug` 。正因为如此， `ES6` 引入了块级作用域，让变量的生命周期更加可控。
+
+块级作用域可通过新增命令`let`和`const`声明，所声明的变量在指定块的作用域外无法被访问。块级作用域在如下情况被创建：
+
+1. 在一个函数内部
+2. 在一个代码块（由一对花括号包裹）内部
+
+`let` 声明的语法与 `var` 的语法一致。你基本上可以用 `let` 来代替 `var` 进行变量声明，但会将变量的作用域限制在当前代码块中。块级作用域有以下几个特点：
+
++ 没有变量提升
+
++ 在同一个块内，禁止重复声明
+
++ 在`const`声明的时候一定要初始化，`let`可以只声明
+
++ `let`、`const`存在暂时性死区
+
++ 循环中的绑定块作用域
+
+## 浏览器加载解析HTML、JS、CSS的过程
+
+- 当浏览器获得一个`html`文件时，会”自上而下“加载，并在加载过程中进行解析渲染。  
+  
+  加载过程中遇到外部`css`文件，浏览器另外发出一个请求，来获取`css`文件。  
+  
+  遇到图片资源，浏览器也会另外发出一个请求，来获取图片资源。这是异步请求，并不会影响`html`文档进行加载
+
+- 当文档加载过程中遇到`js`文件，`html`文档会挂起渲染（加载解析渲染同步）的线程，不仅要等待文档中`js`文件加载完毕，还要等待`js`解析执行完毕，才可以恢复`html`文档的渲染线程
+
+- `css`不会阻塞`html`的解析，但是会阻塞渲染
+
+如果遇到的是内联代码，也就是在 `script` 标签中直接写代码，那么解析过程会暂停，执行权限会转给 `JavaScript` 脚本引擎，待 `JavaScript` 脚本执行完成之后再交由渲染引擎继续解析。
+
+渲染引擎在解析 `HTML` 时，若遇到 `script` 标签引用文件，则会暂停解析过程，同时通知网络线程加载文件，文件加载后会切换至 `JavaScript` 引擎来执行对应代码，代码执行完成之后切换至渲染引擎继续渲染页面。
+
+在这一过程中可以看到，页面渲染过程中包含了请求文件以及执行文件的时间，但页面的首次渲染可能并不依赖这些文件，这些请求和执行文件的动作反而延长了用户看到页面的时间，从而降低了用户体验。
+
+## 浏览器缓存
+
+缓存分为强缓存和协商缓存，从优先级的角度是强缓存大于协商缓存，两种缓存方式最大的区别就是在于是否向服务器发送请求：
+
++ 强缓存是当我们访问`URL`的时候，不会向服务器发送请求，直接从缓存中读取资源，但是会返回`200`的状态码
+
++ 协商缓存就是强缓存失效后，浏览器携带**缓存标识**向服务器发送请求，由服务器根据缓存标识来决定是否使用缓存的过程
+
+<img src="./img/cache.png" />
+
+### 强缓存
+
+#### Expires
+
+`expires`是`HTTP1.0`来控制缓存的一个字段，值为时间戳，表示缓存的到期时间，再次发送请求时，如果未超过过期时间，直接使用该缓存，如果过期了则重新请求。
+
+但是有一个问题就是，是否过期是用本地时间来判断，而我们电脑的本地时间是可以随意修改的。
+
+#### Cache-Control
+
+`Cache-Control`是`HTTP1.1`中来控制缓存的字段，主要取值有：
+
+**Cache-Control使用了max-age，意思是缓存的寿命，解决了expires的问题。**
+
++ `public`：资源客户端和服务器都可以缓存。
+
++ `privite`：资源只有客户端可以缓存。
+
++ `no-cache`：客户端缓存资源，但是是否缓存需要经过协商缓存来验证。
+
++ `no-store`：不使用缓存。
+
++ `max-age`：缓存保质期。
+
+<img src="./img/strongcache.png" />
+
+#### pragma
+
+这个是`HTTP1.0`中禁用网页缓存的字段，其取值为`no-cache`，和`Cache-Control`的`no-cache`效果一样。
+
+### 协商缓存
+
+#### Last-Modified / If-Modified-Since
+
+`Last-Modified`是服务器响应请求时，返回该资源文件在服务器最后被修改的时间。
+
+当客户端再次发送请求时，会携带上次返回的`Last-Modified`的值作为`If-Modified-Since`字段的值，服务端会比较`If-Modified-Since`的字段值与该资源在服务器的最后被修改时间，如果被修改过（也就是服务器的资源最后被修改时间更大），则重新返回资源，状态码为`200`；否则则返回`304`，代表资源无更新，可继续使用缓存文件。
+
+#### Etag / If-None-Match
+
+`Etag`（`Entity Tag`）是服务器响应请求时，返回当前资源文件的一个唯一标识。
+
+**通常是使用内容的散列、最后修改时间戳的哈希值或简单地使用版本号**
+
+`If-None-Match`是客户端再次发起该请求时，携带上次请求返回的唯一标识`Etag`值，通过此字段值告诉服务器该资源上次请求返回的唯一标识值。服务器收到该请求后，发现该请求头中含有`If-None-Match`，则会根据`If-None-Match`的字段值与该资源在服务器的`Etag`值做对比，一致则返回`304`，代表资源无更新，继续使用缓存文件；不一致则重新返回资源文件，状态码为`200`。
+
+> `sha1`算法：对于任意长度的明文，`SHA1`首先对其进行分组，使得每一组的长度为`512`位，然后对这些明文分组反复重复处理。
+
+### 附录
+
+#### ETag 的语法
+
+```md
+ETag: W/"<etag_value>" 
+ETag: "<etag_value>" 
+```
+
+- `W/(可选)`：`W/`（大小写敏感） 表示使用弱验证器。弱验证器很容易生成，但不利于比较。强验证器是比较的理想选择，但很难有效地生成。相同资源的两个弱 `Etag` 值可能语义等同，但不是每个字节都相同。
+
+- `"<etag_value>"`：实体标签唯一地表示所请求的资源。它们是位于双引号之间的 `ASCII` 字符串（如 `"2c-1799c10ab70` ）。没有明确指定生成 `ETag` 值的方法。通常是使用内容的散列、最后修改时间戳的哈希值或简单地使用版本号。比如，`MDN` 使用 `wiki` 内容的十六进制数字的哈希值。
+
+#### 以koa为例
+
+`koa`有一个`koa-etag`库，底层就是用到`etag`这个库，会使用 `sha1` 消息摘要算法来生成 `hash` 值并以 `base64` 格式输出，而实际的生成的 `hash` 值会取前 `27` 个字符。此外，由以上代码可知，最终的 `ETag` 将由实体的长度和哈希值两部分组成。
+
+需要注意的是，生成 `ETag` 的算法并不是固定的， 通常是使用内容的散列、最后修改时间戳的哈希值或简单地使用版本号。
