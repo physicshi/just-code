@@ -62,25 +62,25 @@ SPA 极大地提升了用户体验，它允许页面在不刷新的情况下更�
 
 ## 前端路由
 
-> 单页面富应用：视图之间的跳转不应该导致整个页面被重新加载，而是应该就在当前页面里渲染。具象化来说是一个`portal`(入口)，里面包含多个页面view。
+> 单页面富应用：视图之间的跳转不应该导致整个页面被重新加载，而是应该就在当前页面里渲染。具象化来说是一个`portal`(入口)，里面包含多个页面`view`。
 
-react本质上只是一个视图层的框架，官方并没有提供状态管理或者路由方案，这给了开发者很大的自由，react社区非常活跃，提供了很多成熟的方案，但也会让人很纠结到底使用哪种方案。
+`react`本质上只是一个视图层的框架，官方并没有提供状态管理或者路由方案，这给了开发者很大的自由，`react`社区非常活跃，提供了很多成熟的方案，但也会让人很纠结到底使用哪种方案。
 
 不过对于路由实现，整个社区的认知是统一的，那就是`react-router`。
 
-`raect-router`在version 4开始，路由就不再集中于一个包进行管理：
+`raect-router`在`version 4`开始，路由就不再集中于一个包进行管理：
 
-+ react-router是router的核心部分代码；
-+ react-router-dom是用于浏览器的；
-+ react-router-native是用于原生应用的；
++ `react-router`是`router`的核心部分代码；
++ `react-router-dom`是用于浏览器的；
++ `react-router-native`是用于原生应用的；
 
-当前react-router的版本是version 5。当然看GitHub，已经出了v6 alpha，v6 beta。版本的alpha意思是内测版，bug多，不稳定，还在不断添加新功能；版本的beta意思是公测版，但比alpha稳定，bug还是很多，仍在不断添加新功能。
+当前`react-router`的版本是`version 5`。当然看`GitHub`，已经出了`v6 alpha`，`v6 beta`。版本的`alpha`意思是内测版，`bug`多，不稳定，还在不断添加新功能；版本的`beta`意思是公测版，但比`alpha`稳定，`bug`还是很多，仍在不断添加新功能。
 
-> 此外还会有RC版本，意思是经过了多个beta版本后逐渐稳定（基本不再添加新功能），修复完bug即可进入正式发布版；release版即为正式版本（release本身就是发布的意思），推荐生产使用。
+> 此外还会有`RC`版本，意思是经过了多个`beta`版本后逐渐稳定（基本不再添加新功能），修复完`bug`即可进入正式发布版；`release`版即为正式版本（`release`本身就是发布的意思），推荐生产使用。
 
-安装react-router：
+安装`react-router`：
 
-```js
+```shell
 yarn add react-router-dom
 ```
 
@@ -88,20 +88,20 @@ yarn add react-router-dom
 
 ## react-router-dom的使用
 
-react-router-dom最主要的API是给我们提供了一些组件：
+`react-router-dom`最主要的`API`是给我们提供了一些组件：
 
-+ BrowserRouter和HashRouter
-  + 前者使用history模式，后者使用hash模式（后面我们会在源码当中分析）
-  + 这两个Router包裹在最外层，作为路由器用于监听路径的改变；
-+ Link和NavLink
-  + 这两个组件作为导航，用于路径的跳转，最终会被渲染成a元素；
-  + NavLink是Link的特定版本，会在匹配到URL的同时添加参数（增加样式属性）；
-  + to属性：路由中最重要的属性，用于设置跳转到的URL；
-+ Route
-  + Route就是匹配路由，作为Link中路径的匹配路由，用于声明Link映射到的组件层的哪个组件；
-  + path属性：和Link或者NavLink中的to属性一一对应，表示和哪一个路径匹配；
-  + component属性：设置匹配到路径后，渲染的组件；
-  + exact属性：精准匹配，只有精准匹配到完全一致的路径，才会渲染对应的组件；
++ `BrowserRouter`和`HashRouter`
+  + 前者使用`history`模式，后者使用`hash`模式（后面我们会在源码当中分析）
+  + 这两个`Router`包裹在最外层，作为路由器用于监听路径的改变；
++ `Link`和`NavLink`
+  + 这两个组件作为导航，用于路径的跳转，最终会被渲染成`a`元素；
+  + `NavLink`是`Link`的特定版本，会在匹配到`URL`的同时添加参数（增加样式属性）；
+  + `to`属性：路由中最重要的属性，用于设置跳转到的`URL`；
++ `Route`
+  + `Route`就是匹配路由，作为`Link`中路径的匹配路由，用于声明`Link`映射到的组件层的哪个组件；
+  + `path`属性：和Link或者NavLink中的to属性一一对应，表示和哪一个路径匹配；
+  + `component`属性：设置匹配到路径后，渲染的组件；
+  + `exact`属性：精准匹配，只有精准匹配到完全一致的路径，才会渲染对应的组件；
 
 官方提供的代码如下：
 
@@ -121,9 +121,9 @@ export default function App() {
         <Link to="/about">About</Link>
         <Link to="/users">Users</Link>
         <Switch>
-    <Route exact path="/"><Home /></Route>
-          <Route path="/about"> <About /></Route>
-          <Route path="/users"> <Users /></Route>
+              <Route exact path="/"><Home /></Route>
+              <Route path="/about"> <About /></Route>
+              <Route path="/users"> <Users /></Route>
         </Switch>
     </Router>
   );
@@ -169,7 +169,7 @@ function Users() {
 原因是`react-router`中只要和导航`Link`匹配到的`Route`，对应的组件都会被渲染。所以我们需要利用`react-router-dom`提供的`switch`实现**排他**：
 
 + 只要匹配到了第一个，那么后面的就不该继续匹配了
-+ 只需要利用Switch包裹即可
++ 只需要利用`Switch`包裹即可
 
 ```js
 <Switch>
@@ -204,7 +204,7 @@ function User(){
 
 这是开发中常见的情景，在路由下还会有子路由：
 
-> 写法：在一级路由中的的Route组件指向的组件之中编写二级路由，二级路由的路径需要在一级路由的基础上写，同理，三级路由需要在二级路由的基础上写。
+> 写法：在一级路由中的的`Route`组件指向的组件之中编写二级路由，二级路由的路径需要在一级路由的基础上写，同理，三级路由需要在二级路由的基础上写。
 
 ```js
 import React from "react";
@@ -224,7 +224,7 @@ export default function About (){
   return (
       <Router>
         <Link to="/about">商品</Link>
-        <Link to="about/users">商品客户</Link>
+        <Link to="/about/users">商品客户</Link>
     <Switch>
         <Route exact path="/about" component={AboutProduct}/>
         <Route path="/about/users" component={AboutUsers}/>

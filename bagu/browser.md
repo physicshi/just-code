@@ -124,7 +124,7 @@ DOM和CSSOM结合，计算出 DOM 树中可见元素的几何位置
 
 **图块是栅格化执行的最小单位**
 
-栅格化指将图块转换为位图，一旦所有图块都被光栅化，合成线程就会生成一个绘制图块的命令——“DrawQuad”，然后将该命令提交给浏览器进程。
+栅格化指将图块转换为位图，一旦所有图块都被栅格化，合成线程就会生成一个绘制图块的命令——“DrawQuad”，然后将该命令提交给浏览器进程。
 
 **合成就是栅格化后生成绘制命令，提交给浏览器进程**
 
@@ -175,7 +175,7 @@ DOM和CSSOM结合，计算出 DOM 树中可见元素的几何位置
 
 不要一条一条地修改 DOM 的样式。可以先定义好 css 的 class，然后修改 DOM 的 className。
 
-```
+```js
 // 判断是否是⿊⾊系样式
 const theme = isDark ? 'dark' : 'light'
 // 根据判断来设置不同的class
@@ -188,7 +188,7 @@ ele.setAttribute('className', theme)
 
 DOM树中，因此只触发⼀次重排
 
-```
+```js
 var fragment = document.createDocumentFragment();
 for (let i = 0;i<10;i++){
 let node = document.createElement("p");
@@ -210,8 +210,8 @@ document.body.appendChild(fragment);
 
 提升合成层的最好方式是使⽤ CSS 的 will-change 属性：
 
-```
+```css
 #target {
-will-change: transform;
+    will-change: transform;
 }
 ```

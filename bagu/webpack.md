@@ -620,4 +620,4 @@ class MyApp extends React.Component {
 
 通过`cra`，然后`npm run eject`暴露出来。
 
-打包过程对很多node模块做了排除，设置为了empty
+打包过程对很多`node`模块做了排除，设置为了`empty`

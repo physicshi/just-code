@@ -44,7 +44,7 @@
 
 > 在日常开发中，我们已经习惯了用JSX来描述React组件。
 
-在react 17之前，我们必须import React from "react" 才可以写JSX，本质上 是babel预编译JSX为React.createElemnet(type,config,children)，
+在`react 17`之前，我们必须`import React from "react"` 才可以写`JSX`，本质上 是`babel`预编译`JSX`为`React.createElemnet(type,config,children)`：
 
 ```js
 {
@@ -52,11 +52,11 @@
 }
 ```
 
-在react17之后，引入了全新的JSX转换，不会再将JSX转为React.createElemnet，而是自动从react的package中引入新的。
+在`react17`之后，引入了全新的`JSX`转换，不会再将`JSX`转为`React.createElemnet`，而是自动从`react`的`package`中引入新的。
 
-**JSX 的本质是React.createElement这个 JS 调用的语法糖。**
+**`JSX` 的本质是`React.createElement`这个 `JS` 调用的语法糖。**
 
-createElement接受三个参数，type用于标识节点的类型，比如div、h1、也可以是react组件类型或者react  fragment；config是以对象形式传入节点的属性（没有的话就是null），children是组件之间传入的内容（子组件、子元素）。最后React.createElement会返回ReactElement调用，ReactElement 会把传入的参数按照一定的规范，进行数据处理，“组装”进了 element 对象，并且返回element对象，最终在createElement里就会返回element对象实例。这个 **ReactElement 对象实例**，本质上**是以 JavaScript 对象形式存在的对 DOM 的描述**，也就是“虚拟 DOM”。
+`createElement`接受三个参数，`type`用于标识节点的类型，比如`div`、`h1`、也可以是`react`组件类型或者`react  fragment`；`config`是以对象形式传入节点的属性（没有的话就是`null`），`children`是组件之间传入的内容（子组件、子元素）。最后React.createElement会返回`ReactElement`调用，ReactElement 会把传入的参数按照一定的规范，进行数据处理，“组装”进了 element 对象，并且返回element对象，最终在createElement里就会返回element对象实例。这个 **ReactElement 对象实例**，本质上**是以 `JavaScript` 对象形式存在的对 `DOM` 的描述**，也就是“虚拟 `DOM`”。
 
 ## 虚拟DOM
 
@@ -163,6 +163,12 @@ react diff算法主要分为三个维度：
 > 比如`useState()`括号中传入的初始值只有在第一次渲染时会用到，之后都会取`workInProgressHook`的`memoizedstate`   作为下一次更新的初始数据执行`hooks`函数，并且更新到`workInProgressHook`的`memoizedstate`
 
 ### hooks原理
+
+> `workInProgress.memoizedState = null`; /* 每一次执行函数组件之前，先清空状态 （用于存放`hooks`列表）*/
+> 
+> - 对于类组件 `fiber` ，用 `memoizedState` 保存 `state` 信息，**对于函数组件 `fiber` ，用 `memoizedState` 保存 `hooks` 信息**。
+> - 函数组件对应 `fiber` 用 `memoizedState` 保存 `hooks` 信息，每一个 hooks 执行都会产生一个 `hooks` 对象，`hooks` 对象中，保存着当前 `hooks` 的信息，不同 `hooks` 保存的形式不同。每一个 `hooks` 通过 `next` 链表建立起关系。
+> - `fiber.memoizedState`保存的是`hooks`对象链表，而每一个`hooks`对象的`memoizedState`的是属性保存了`state`或者`effect`或者`ref`
 
 函数组件本身作为一个函数是没办法保存状态的，我们真正的状态存储在`hook`的`memoizedState`属性上。
 
@@ -342,7 +348,7 @@ function dispatchAction(fiber, queue, action){
 
 ## React Fiber架构
 
-在 React 16 之前，每当我们触发一次组件的更新，React 都会构建一棵新的虚拟 DOM 树，通过与上一次的虚拟 DOM 树进行 diff，实现对 DOM 的定向更新。这个过程，是一个递归的过程（**react16之后就没有所谓的两棵虚拟DOM树了**）。这个过程被称为Reconcilation，中文叫做协调。但是在协调期间，react会一直霸占浏览器资源，一则会导致用户的行为得不到响应，二则是掉帧。
+在 `React 16` 之前，每当我们触发一次组件的更新，React 都会构建一棵新的虚拟 DOM 树，通过与上一次的虚拟 DOM 树进行 diff，实现对 DOM 的定向更新。这个过程，是一个递归的过程（**react16之后就没有所谓的两棵虚拟DOM树了**）。这个过程被称为Reconcilation，中文叫做协调。但是在协调期间，react会一直霸占浏览器资源，一则会导致用户的行为得不到响应，二则是掉帧。
 
 react通过fiber架构，让自己的协调过程变成**可中断**的，适时让出任务执行权，可以让浏览器及时响应用户的交互。（一个任务短时间内无法完成就中断，执行另一个任务，不阻塞交互，让用户觉得快）。
 

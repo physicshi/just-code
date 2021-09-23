@@ -98,13 +98,13 @@ export default objectIs;
 
 ## commonjs加载顺序
 
-+ 模块在被第一次引入时，模块中的js代码会被运行一次
++ 模块在被第一次引入时，模块中的`js`代码会被运行一次
 
 + 模块被多次引入时，会缓存，最终只加载(运行)一次 
   
-  + 因为每个模块对象`module`都有一个属性：loaded。
+  + 因为每个模块对象`module`都有一个属性：`loaded`。
   
-  + 为false表示还没有加载，为true表示已经加载;
+  + 为`false`表示还没有加载，为`true`表示已经加载;
 
 Node采用的是深度优先加载：`main -> aaa -> ccc -> ddd -> eee ->bbb`
 
@@ -421,8 +421,6 @@ AJAX：可能会影响部分前端取值的行为和结果。
 Image：图片一般放 CDN，大部分情况不需要 Cookie，故影响有限。但如果引用了需要鉴权的图片，可能会受到影响。
 
 除了这些还有 script 的方式，这种方式也不会发送 Cookie，像淘宝的大部分请求都是 jsonp，如果涉及到跨站也有可能会被影响。
-
-## 解析url
 
 ## http请求头
 
@@ -1472,7 +1470,27 @@ Function.prototype.bind = function (context){
 
 ## CSS
 
-## 半圆
+### 圆
+
+```css
+div {
+    border-radius: 50%;
+    width: 200px;
+    height: 200px; 
+    /* 宽度和高度需要相等 */
+}
+```
+
+### 半圆
+
+```css
+ div{
+    width:100px;
+    height:50px; 
+    background-color:#cb18f8;
+    border-radius:50px 50px 0 0; /* 左上、右上、右下、左下 */
+ }
+```
 
 ### 三角形
 
@@ -1535,6 +1553,45 @@ div {
             border: 50px solid;
             border-color: transparent #fff transparent transparent;
         }
+```
+
+### 九宫格
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>JS Bin</title>
+</head>
+<body>
+   <div id="contain" class="contain blue">
+        <div class="item "><span>1</span>
+        </div>
+        <div class="item "><span>2</span>
+        </div>
+        <div class="item "><span>3</span>
+        </div>
+        <div class="item "><span>4</span>
+        </div>
+        <div class="item "><span>5</span>
+        </div>
+        <div class="item "><span>6</span>
+        </div>
+        <div class="item "><span>7</span>
+        </div>
+        <div class="item "><span>8</span>
+        </div>
+        <div class="item "><span>9</span>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+```css
+
 ```
 
 ## 插花
@@ -1645,7 +1702,7 @@ foo.doAnother();
 
 这个代码模式就是模块。
 
-**CoolModule()** 只是一个函数，我们通过调用他创建了一个模块实例，也创建了内部作用域和闭包。
+**CoolModule()** 只是一个函数，我们通过调用他创建了一个模块实例，也创建了内部作用域和闭包。                                                                           
 
 这里返回值可以看作**模块的公共API**。每次调用都会创建一个新的模块实例。
 
@@ -1807,6 +1864,7 @@ console.log(Array.from(o)) // [42,52,63]
 + 多态
   
   + 多态就是相同的事物，调用其相同的方法，参数也相同时，但表现的行为却不同。多态的表现形式重写与重载。
+  + 多态，为不同的类型实例提供统一的接口，所以对应于同一个操作不同的对象会有不同的输出结果，这要看具体的对象是怎么实现的
 
 ## 原型、原型链
 
@@ -1859,7 +1917,7 @@ function reflect<T>(params: P[]){
 
 
 // reflectArr 是 (string | number)[]
-const reflectArr = reflectArray([1, '1']); 
+const reflectArr = reflect([1, '1']); 
 ```
 
 最经典的还是`react`里的定义：
@@ -2123,7 +2181,7 @@ function add(num1, num2) {
 
 ## JS执行上下文
 
-执行上下文可以理解为`JS`的运行环境，第一次载入`JS`代码，首先会创建一个全局环境（就是`main`函数对应的帧），直到程序退出才会被销毁（比如关闭浏览器）；随着函数一层层被调用，栈会一层层扩展；调用结束，栈又会一层层回溯，把内存释放回去。
+执行上下文可以理解为`JS`函数的运行环境，第一次载入`JS`代码，首先会创建一个全局环境（就是`main`函数对应的帧），直到程序退出才会被销毁（比如关闭浏览器）；随着函数一层层被调用，栈会一层层扩展；调用结束，栈又会一层层回溯，把内存释放回去。
 
 > 不同的函数运行环境不一样，即使是同一个函数，在被多次调用时也会创建多个不同的函数环境。
 
@@ -2270,9 +2328,9 @@ foo() // "123"
 
 ## 浏览器加载解析HTML、JS、CSS的过程
 
-- 当浏览器获得一个`html`文件时，会”自上而下“加载，并在加载过程中进行解析渲染。  
+- 当浏览器获得一个`html`文件时，会”自上而下“加载，并在加载过程中进行解析渲染  
   
-  加载过程中遇到外部`css`文件，浏览器另外发出一个请求，来获取`css`文件。  
+  加载过程中遇到外部`css`文件，浏览器另外发出一个请求，来获取`css`文件  
   
   遇到图片资源，浏览器也会另外发出一个请求，来获取图片资源。这是异步请求，并不会影响`html`文档进行加载
 
@@ -2362,3 +2420,226 @@ ETag: "<etag_value>"
 `koa`有一个`koa-etag`库，底层就是用到`etag`这个库，会使用 `sha1` 消息摘要算法来生成 `hash` 值并以 `base64` 格式输出，而实际的生成的 `hash` 值会取前 `27` 个字符。此外，由以上代码可知，最终的 `ETag` 将由实体的长度和哈希值两部分组成。
 
 需要注意的是，生成 `ETag` 的算法并不是固定的， 通常是使用内容的散列、最后修改时间戳的哈希值或简单地使用版本号。
+
+## 跨域
+
+首先浏览器遵循同源策略，同源就是协议、域名、端口号都相同，非同源存在一些限制，主要就是会限制`Ajax`请求（浏览器会拦截响应）。
+
+> 具体来讲非同源会有三个限制：
+> 
+> + 无法读取非同源网页的 `Cookie`、`LocalStorage` 和 `IndexedDB`
+> 
+> + 无法接触非同源网页的 `DOM`
+> 
+> + 无法向非同源地址发送 `AJAX` 请求（可以发送，但浏览器会拒绝接受响应）
+
+浏览器遵循同源策略，所谓同源，指的是协议、域名、端口号都相同，非同源存在很多限制，比如限制Ajax请求。当浏览器向目标URL发送Ajax请求时，只要当前URL与目标URL不同源，则产生跨域，被称为跨域请求。
+
+> img、script、link、video、iframe、audio等标签不受同源政策的限制
+
+### JSONP
+
+原理：`script`标签跨域引用`JS`文件不会受到浏览器同源策略的限制。
+
+优势：兼容性好，`IE`低版本不能用`CORS`，但可以使用`JSONP`
+
+缺点：只支持`GET`
+
+```js
+const JSONP=(url,params,callbackName="callbackName")=>{
+    const generateUrl=()=>{
+        let dataStr="";
+        for(let key in params){
+            dataStr+=`${key}=${params[key]}&`
+        }
+        dataStr+=`callbackName=${callbackName}`
+        return `${url}?${dataStr}`
+    }
+    return new Promise((resolve,reject)=>{
+        let scriptEl=document.createElement("script");
+        scriptEl.src=generateUrl();
+        console.log(generateUrl())
+        window[callbackName]=(data)=>{
+            resolve(data);
+            document.body.removeChild(scriptEl)
+        }
+    })
+}
+
+JSONP("http://suggest.taobao.com/sug",{code:"utf-8",q:"123"}).then((data)=>{console.log(data)})
+```
+
+### CORS
+
+> **CORS 需要浏览器和后端同时支持。IE 8 和 9 需要通过 XDomainRequest 来实现**
+> 
+> 浏览器会自动进行 CORS 通信，实现 CORS 通信的关键是后端。只要后端实现了 CORS，就实现了跨域。
+> 
+> **服务端设置 Access-Control-Allow-Origin 就可以开启 CORS**。 该属性表示哪些域名可以访问资源，如果设置通配符则表示所有网站都可以访问资源。
+
+跨域资源共享，利用http头部字段让浏览器与服务器进行沟通，从而决定请求是否成功。
+
+分为简单请求与非简单请求：
+
+> 两者的区别就是对请求头和请求方法作了限制。
+
+**简单请求**
+
+- `GET/POST/HEAD`
+
+- `Content-Type` 的值仅限于下列三者之一：
+  
+  - `text/plain`
+  - `multipart/form-data`
+  - `application/x-www-form-urlencoded`
+
+对于简单请求，在请求发出后，会自动的在头部字段添加`origin`，说明请求的源。服务器在拿到请求后，在回应时需要设置`Access-Control-Allow-Origin`字段，说明可以访问该资源的源，若`origin`在此范围内，就可以拿到该资源。
+
+```js
+// console.log(request.headers["referer"])
+response.setHeader("Access-Control-Allow-Origin","允许的源")
+```
+
+**非简单请求**
+
+对于非简单请求，会先发一条`options`请求作为预检请求，添加了 1 个请求头部字段 `Access-Control-Request-Method`，值为跨域请求所使用的请求方法；如果这个跨域请求还有其他字段，还会在请求头部添加了 `Access-Control-Request-Headers` 字段，值为跨域请求添加的请求头部字段。
+
+在服务端收到预检请求后，除了在响应头部添加 `Access-Control-Allow-Origin` 字段之外，至少还会添加 `Access-Control-Allow-Methods` 字段来告诉浏览器服务端允许的请求方法，并返回 `204` 状态码。
+
+在上面的例子中，服务端还根据浏览器的 `Access-Control-Request-Headers` 字段回应了一个 `Access-Control-Allow-Headers` 字段，来告诉浏览器服务端允许的请求头部字段。
+
+- 在预检请求的响应返回后，若请求不满足响应头的条件，则触发`XMLHttpRequest`的`onErrror`方法；
+
+- 若满足响应头条件，则正常发送`CORS`请求，同简单请求一样，浏览器自动加上`origin`字段，服务端响应返回`Access-Control-Allow-Origin`
+
+## 垃圾回收
+
+`JavaScript`是使用垃圾回收的语言，也就是执行环境负责在代码执行时管理内存。重点在于标记不再被使用的变量：
+
++ 标记清除
+
++ 引用计数
+
+先说一下引用计数。
+
+### 引用计数
+
+**记录每个值被引用的次数。**
+
+声明变量并且赋一个引用值时，这个值的引用数为`1`；如果同一个值又赋给另一个变量，那么引用数会增加`1`，如果这个变量被其他值覆盖，那么引用数减`1`。当一个值的引用数为零，就意味着不会再被访问到，所以可以安全释放对应的内存空间。
+
+引用计数的问题在于可能会有循环引用：
+
+> 对象A的一个指针指向`B`，对象`B`也引用了`A`对象。
+
+```js
+function badCycle() {
+  var cycleObj1 = {}
+  var cycleObj2 = {}
+  cycleObj1.target = cycleObj2
+  cycleObj2.target = cycleObj1
+}
+
+badCycle()
+```
+
+如果是引用计数，对于`cycleObj1`和`cycleObj2`，这两个对象的引用数都是`1`，所以不会被释放；不过对于标记清除来讲，当`badCycle()`执行完，`cycleObj1`和`cycleObj2`不会在上下文中再出现，所以对应的内存也会被释放。
+
+### 标记清除
+
+新生代和老生代是两个方案：
+
++ 新生代：存活对象（被引用的对象）从`from`空间复制到`to`空间，当复制完成后，`from` 空间和 `to` 空间进行调换，`to` 空间会变为新的 from 空间，原来的 `from` 空间则变为 `to` 空间。再有新的对象，就会继续这样操作，新的对象放到`from`区域，再垃圾回收。
+
++ 老生代：**标记清除方案。** 标记阶段会从`window`出发遍历堆中所有对象，并对**可以访问到的对象进行标记**；清除阶段则是对未标记对象的空间进行回收。
+
+## break、continue
+
+首先`break`和`continue`都是立即退出循环，不同的是：
+
++ `break`退出循环，强制执行循环后面的语句
+
++ `continue`也是退出循环，但是再次从循环顶部开始执行（也就是说退出本次循环）
+
+```js
+let num = 0
+for(let i=1;i<10;i++){
+    if(1 % 5 == 0){
+        break;
+    }
+    num++
+}
+console.log(num) // 4
+```
+
+如果换成`continue`会得到 `8` ，`i=10`的时候会退出循环，因为中间有一次`continue`，所以执行`num++`不是`9`次而是`8`次
+
+## 局部状态管理
+
+利用`createContext`、`useContext`、`useReducer`实现局部状态管理，核心理念就是在`Provider`传入的`value`就是`useReducer`返回的`state`和`dispatch`，这样就能在子组件中通过`useContext`拿到`state`和`dispatch`，比如`const [globalStore,setGlobalStore] = useGlobalStore()`
+
+```ts
+import React, {
+    createContext,
+    Dispatch,
+    ReactNode,
+    ReducerAction,
+    useContext,
+    useReducer,
+  } from "react";
+
+  export function NOOP() {}
+
+  // 这里写要管理的状态
+  export const globalConfig = {};
+
+  export type IGlobal = typeof globalConfig;
+
+  export type IReducer = (state: IGlobal, payload: Partial<IGlobal>) => IGlobal;
+
+  export type IDispatch = Dispatch<ReducerAction<IReducer>>;
+
+  const GlobalContext = createContext<[IGlobal, IDispatch]>([globalConfig, NOOP]);
+
+  function reducer(prev: IGlobal, payload: Partial<IGlobal>) {
+    return { ...prev, ...payload };
+  }
+
+  export function GlobalStoreProvider({ children }: { children: ReactNode }) {
+    const tuple = useReducer(reducer, globalConfig);
+    return (
+        <GlobalContext.Provider value={tuple}>
+            {children}
+        </GlobalContext.Provider>
+    )
+  }
+
+  export const useGlobalStore = () => useContext(GlobalContext);
+```
+
+### createContext和useContext
+
+`createContext`是创建一个上下文`context`对象，传入初始数据（`defaultValue`），订阅了这个上下文的组件中，可以拿到上下文中提供（`context.Provider`）的数据（`value`）。
+
+```js
+const MyContext = React.createContext(defaultValue)
+```
+
+> 如果匹配不到最新的 Provider 则会使用默认值，默认值一般只有在**对组件进行单元测试**（组件并未嵌入到父组件中）的时候，比较有用。
+
+通过 `createContext` 创建出来的上下文，在子组件中可以通过 `useContext` 这个 `Hook` 获取 `Provider` 提供的`value`。
+
+```js
+// useContext 需要将 MyContext 这个 Context 实例传入
+const {funcName} = useContext(MyContext);
+```
+
+再来看`useReducer`：
+
+```js
+const [state, dispatch] = useReducer(reducer, initialState)
+```
+
+> 用`dispatch`来触发`reducer`的逻辑，在这里就是`setGlobalStore`生成新的`GlobalConfig`
+
+所以最后`useGlobalStore`导出的就是`[{...globalConfig}, IDispatch]`
